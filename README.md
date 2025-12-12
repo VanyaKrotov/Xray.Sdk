@@ -1,0 +1,1 @@
+Это Sdk для работы с xray-core для dotnet
