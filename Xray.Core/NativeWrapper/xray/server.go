@@ -36,14 +36,14 @@ func StartServer(jsonConfig string) (*core.Instance, *transfer.Response) {
 
 	instance, err := core.New(coreCfg)
 	if err != nil {
-		log.Printf("XRay init error: %v", err)
+		log.Printf("Xray init error: %v", err)
 
 		return nil, transfer.NewResponse(InitXrayError, err.Error())
 	}
 
 	if err := instance.Start(); err != nil {
 		instance.Close()
-		log.Printf("XRay start error: %v", err)
+		log.Printf("Xray start error: %v", err)
 
 		return nil, transfer.NewResponse(StartXrayError, err.Error())
 	}

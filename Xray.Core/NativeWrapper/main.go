@@ -21,7 +21,7 @@ func StartServer(jsonConfig *C.char) *C.char {
 	defer mu.Unlock()
 
 	if instance != nil {
-		return C.CString(transfer.NewResponse(xray.XrayAlreadyStarted, "XRay server already started").ToString())
+		return C.CString(transfer.NewResponse(xray.XrayAlreadyStarted, "Xray server already started").ToString())
 	}
 
 	goJSON := C.GoString(jsonConfig)
