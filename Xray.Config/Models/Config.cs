@@ -1,9 +1,9 @@
+using System.Text.Json;
 using System.Text.Json.Serialization;
-using Xray.Config.Utilities;
 
 namespace Xray.Config.Models;
 
-public class XRayConfig
+public class XrayConfig
 {
     [JsonPropertyName("log")]
     public LogConfig? Log { get; set; }
@@ -50,5 +50,15 @@ public class XRayConfig
     [JsonPropertyName("burstObservatory")]
     public BurstObservatoryConfig? BurstObservatory { get; set; }
 
-    public override string ToString() => XrayConfigJsonSerializer.Serialize(this);
+
+    private static JsonSerializerOptions _options = new JsonSerializerOptions()
+    {
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+    };
+
+    public string ToJson() => JsonSerializer.Serialize(this, _options);
+
+    public override string ToString() => ToJson();
+
+    public static XrayConfig FromJson(string json) => JsonSerializer.Deserialize<XrayConfig>(json, _options)!;
 }

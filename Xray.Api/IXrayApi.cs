@@ -2,7 +2,7 @@ using Xray.Api.Models;
 
 namespace Xray.Api.Service;
 
-public interface IXtlsApi
+public interface IXrayApi
 {
     Task<List<BaseUser>> GetInboundUsers(GetUsersOptions options);
 

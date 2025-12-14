@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using Xray.Config.Enums;
 
@@ -9,8 +10,8 @@ public class DnsConfig
     public Dictionary<string, List<string>>? Hosts { get; set; }
 
     [JsonPropertyName("servers")]
+    [JsonConverter(typeof(DnsServersJsonConverter))]
     public List<DnsServer>? Servers { get; set; }
-
 
     [JsonPropertyName("clientIp")]
     public string? ClientIP { get; set; }
@@ -65,4 +66,56 @@ public class DnsServer
 
     [JsonPropertyName("finalQuery")]
     public bool FinalQuery { get; set; }
+}
+
+// convertors
+
+class DnsServersJsonConverter : JsonConverter<List<DnsServer>>
+{
+    public override List<DnsServer>? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        var servers = new List<DnsServer>();
+
+        if (reader.TokenType != JsonTokenType.StartArray)
+            throw new JsonException("Expected StartArray for servers");
+
+        while (reader.Read())
+        {
+            if (reader.TokenType == JsonTokenType.EndArray) { break; }
+
+            if (reader.TokenType == JsonTokenType.String)
+            {
+                servers.Add(new DnsServer { Address = reader.GetString() });
+            }
+            else if (reader.TokenType == JsonTokenType.StartObject)
+            {
+                using (var doc = JsonDocument.ParseValue(ref reader))
+                {
+                    var server = doc.Deserialize<DnsServer>(options);
+                    if (server != null)
+                    {
+                        servers.Add(server);
+                    }
+                }
+            }
+            else
+            {
+                throw new JsonException($"Unexpected token {reader.TokenType} in servers array");
+            }
+        }
+
+        return servers;
+    }
+
+    public override void Write(Utf8JsonWriter writer, List<DnsServer> value, JsonSerializerOptions options)
+    {
+        writer.WriteStartArray();
+
+        foreach (var server in value)
+        {
+            JsonSerializer.Serialize(writer, server, options);
+        }
+
+        writer.WriteEndArray();
+    }
 }

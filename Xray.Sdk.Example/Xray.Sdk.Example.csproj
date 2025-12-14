@@ -11,6 +11,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Xray.Api\Xray.Api.csproj" />
     <ProjectReference Include="..\Xray.Config\Xray.Config.csproj" />
+    <ProjectReference Include="..\Xray.Core\Xray.Core.csproj" />
   </ItemGroup>
 
 </Project>

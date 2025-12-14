@@ -10,7 +10,7 @@ using Xray.Api.Models;
 
 namespace Xray.Api.Service;
 
-public class XtlsApi : IXtlsApi
+public class XrayApi : IXrayApi
 {
     private readonly HandlerService.HandlerServiceClient _handler;
 
@@ -18,7 +18,7 @@ public class XtlsApi : IXtlsApi
 
     private readonly StatsService.StatsServiceClient _stats;
 
-    public XtlsApi(string host)
+    public XrayApi(string host)
     {
         var channel = GrpcChannel.ForAddress(host);
 

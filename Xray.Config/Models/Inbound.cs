@@ -173,10 +173,10 @@ public class VlessClient
 public class ShadowSocksClient
 {
     [JsonPropertyName("password")]
-    public required string Password { get; set; }
+    public string? Password { get; set; }
 
     [JsonPropertyName("method")]
-    public EncryptionMethod Method { get; set; }
+    public EncryptionMethod? Method { get; set; }
 
     [JsonPropertyName("email")]
     public string? Email { get; set; }

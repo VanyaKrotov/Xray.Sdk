@@ -2,27 +2,8 @@ using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Xray.Config.Models;
 
 namespace Xray.Config.Utilities;
-
-public static class XrayConfigJsonSerializer
-{
-    private static JsonSerializerOptions _options = new JsonSerializerOptions()
-    {
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-    };
-
-    public static string Serialize(XRayConfig config)
-    {
-        return JsonSerializer.Serialize(config, _options);
-    }
-
-    public static XRayConfig Deserialize(string json)
-    {
-        return JsonSerializer.Deserialize<XRayConfig>(json)!;
-    }
-}
 
 static class EnumMemberConvert
 {

@@ -1,12 +1,22 @@
 ﻿using Xray.Config.Enums;
 using Xray.Config.Models;
-using Xray.Config.Utilities;
+using Xray.Core;
 
-var config = new XRayConfig()
+var config = new XrayConfig()
 {
     Log = new LogConfig()
     {
         LogLevel = LogLevel.Error
+    },
+    Dns = new DnsConfig()
+    {
+        Servers = new List<DnsServer>()
+        {
+            new DnsServer()
+            {
+                Address = "8.8.8.8"
+            }
+        }
     },
     Inbounds = new List<Inbound>()
     {
@@ -46,10 +56,32 @@ var config = new XRayConfig()
     }
 };
 
-var export = XrayConfigJsonSerializer.Serialize(config);
-var import = XrayConfigJsonSerializer.Deserialize(export);
+var export = config.ToJson();
+var import = XrayConfig.FromJson(@"
+    {
+  ""log"": {
+    ""loglevel"": ""warning""
+  },
+  ""inbounds"": [
+    {
+      ""tag"": ""Shadowsocks TCP"",
+      ""listen"": ""0.0.0.0"",
+      ""port"": 1080,
+      ""protocol"": ""shadowsocks"",
+      ""settings"": {
+        ""clients"": [],
+        ""network"": ""tcp,udp""
+      }
+    }
+  ]
+}
+");
 
-Console.WriteLine(export);
+var reimport = import.ToJson();
+
+XrayCore.StartServer(import);
+
+Console.WriteLine(import);
 
 // var xtlsClient = new XtlsApi("http://127.0.0.1:8080");
 
