@@ -206,6 +206,9 @@ public class RealitySettings
     [JsonPropertyName("publicKey")]
     public required string PublicKey { get; set; }
 
+    [JsonPropertyName("mldsa65Verify")]
+    public string? Mldsa65Verify { get; set; }
+
     [JsonPropertyName("shortId")]
     public string? ShortId { get; set; }
 
@@ -277,6 +280,9 @@ public class XHttpSettings
 
     [JsonPropertyName("extra")]
     public XHttpExtraSettings? Extra { get; set; }
+
+    [JsonPropertyName("headers")]
+    public HttpHeaders? Headers { get; set; }
 }
 
 public class XHttpExtraSettings
@@ -374,11 +380,17 @@ public class KcpSettings
 
 public class GRPCSettings
 {
+    [JsonPropertyName("authority")]
+    public string? Authority { get; set; }
+
     [JsonPropertyName("serviceName")]
     public string? ServiceName { get; set; }
 
     [JsonPropertyName("multiMode")]
     public bool MultiMode { get; set; }
+
+    [JsonPropertyName("user_agent")]
+    public string? UserAgent { get; set; }
 
     [JsonPropertyName("idle_timeout")]
     public int? IdleTimeout { get; set; }
@@ -405,7 +417,7 @@ public class WSSettings
     public string? Host { get; set; }
 
     [JsonPropertyName("headers")]
-    public Dictionary<string, string>? Headers { get; set; }
+    public HttpHeaders? Headers { get; set; }
 }
 
 public class HttpUpgradeSettings
@@ -420,5 +432,5 @@ public class HttpUpgradeSettings
     public string? Host { get; set; }
 
     [JsonPropertyName("headers")]
-    public Dictionary<string, string> Headers { get; set; } = new();
+    public HttpHeaders? Headers { get; set; }
 }

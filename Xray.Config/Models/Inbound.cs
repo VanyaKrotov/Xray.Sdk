@@ -27,7 +27,7 @@ public abstract class Inbound
     public InboundAllocate? Allocate { get; set; }
 
     [JsonPropertyName("streamSettings")]
-    public StreamSettings? StreamSettings { get; set; }
+    public StreamSettings StreamSettings { get; set; } = new();
 
     public Inbound(InboundProtocol protocol)
     {
@@ -164,7 +164,7 @@ public class VlessClient
     public int Level { get; set; } = 0;
 
     [JsonPropertyName("email")]
-    public string? Email { get; set; }
+    public required string Email { get; set; }
 
     [JsonPropertyName("flow")]
     public Flow Flow { get; set; } = Flow.None;
@@ -244,7 +244,7 @@ public class SocksInbound : Inbound
     public SocksInbound() : base(InboundProtocol.Socks) { }
 
     [JsonPropertyName("settings")]
-    public SocksSettings? Settings { get; set; }
+    public SocksSettings Settings { get; set; } = new();
 }
 
 public class TrojanInbound : Inbound
@@ -252,7 +252,7 @@ public class TrojanInbound : Inbound
     public TrojanInbound() : base(InboundProtocol.Trojan) { }
 
     [JsonPropertyName("settings")]
-    public TrojanSettings? Settings { get; set; }
+    public TrojanSettings Settings { get; set; } = new();
 }
 
 public class VlessInbound : Inbound
@@ -260,7 +260,7 @@ public class VlessInbound : Inbound
     public VlessInbound() : base(InboundProtocol.Vless) { }
 
     [JsonPropertyName("settings")]
-    public VlessSettings? Settings { get; set; }
+    public VlessSettings Settings { get; set; } = new();
 }
 
 public class VMessInbound : Inbound
@@ -268,7 +268,7 @@ public class VMessInbound : Inbound
     public VMessInbound() : base(InboundProtocol.VMess) { }
 
     [JsonPropertyName("settings")]
-    public VMessSettings? Settings { get; set; }
+    public VMessSettings Settings { get; set; } = new();
 }
 
 public class WireguardInbound : Inbound

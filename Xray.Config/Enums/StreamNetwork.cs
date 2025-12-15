@@ -13,8 +13,8 @@ public enum StreamNetwork
     [EnumMember(Value = "xhttp")]
     XHttp,
 
-    [EnumMember(Value = "tcp")]
-    Tcp,
+    // [EnumMember(Value = "tcp")]
+    // Tcp,
 
     [EnumMember(Value = "kcp")]
     Kcp,
