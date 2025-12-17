@@ -23,7 +23,7 @@ const (
 	XrayAlreadyStarted int = 5
 )
 
-func StartServer(jsonConfig string) (*core.Instance, *transfer.Response) {
+func Start(jsonConfig string) (*core.Instance, *transfer.Response) {
 	var cfg iconf.Config
 	if err := json.Unmarshal([]byte(jsonConfig), &cfg); err != nil {
 		return nil, transfer.NewResponse(JsonParseError, err.Error())
@@ -51,7 +51,7 @@ func StartServer(jsonConfig string) (*core.Instance, *transfer.Response) {
 	return instance, transfer.SuccessResponse("Server started")
 }
 
-func StopServer(instance *core.Instance) {
+func Stop(instance *core.Instance) {
 	instance.Close()
 	instance = nil
 

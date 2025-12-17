@@ -5,7 +5,7 @@ namespace Xray.Config.Models;
 public class ApiConfig
 {
     [JsonPropertyName("tag")]
-    public string? Tag { get; set; }
+    public required string Tag { get; set; }
 
     [JsonPropertyName("listen")]
     public string? Listen { get; set; }

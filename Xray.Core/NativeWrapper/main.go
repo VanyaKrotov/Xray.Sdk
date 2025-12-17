@@ -11,70 +11,58 @@ import (
 )
 
 var (
-	instance *core.Instance
-	mu       sync.Mutex
+	mu        sync.Mutex
+	instances map[string]*core.Instance
 )
 
-//export StartServer
-func StartServer(jsonConfig *C.char) *C.char {
+func init() {
+	instances = make(map[string]*core.Instance)
+}
+
+//export Start
+func Start(cUuid *C.char, cJson *C.char) *C.char {
 	mu.Lock()
 	defer mu.Unlock()
 
-	if instance != nil {
+	uuid := C.GoString(cUuid)
+	if _, ok := instances[uuid]; ok {
 		return C.CString(transfer.NewResponse(xray.XrayAlreadyStarted, "Xray server already started").ToString())
 	}
 
-	goJSON := C.GoString(jsonConfig)
-	inst, resp := xray.StartServer(goJSON)
-	if !resp.IsSuccess() {
-		return C.CString(resp.ToString())
+	json := C.GoString(cJson)
+	inst, resp := xray.Start(json)
+	if resp.IsSuccess() {
+		instances[uuid] = inst
 	}
-
-	instance = inst
 
 	return C.CString(resp.ToString())
 }
 
-//export StopServer
-func StopServer() *C.char {
+//export Stop
+func Stop(cUuid *C.char) *C.char {
 	mu.Lock()
 	defer mu.Unlock()
 
-	if instance != nil {
-		xray.StopServer(instance)
-		instance = nil
+	uuid := C.GoString(cUuid)
+	if instance, ok := instances[uuid]; ok {
+		xray.Stop(instance)
+		delete(instances, uuid)
 	}
 
 	return C.CString(transfer.SuccessResponse("Server stopped").ToString())
 }
 
 //export IsStarted
-func IsStarted() C.int {
+func IsStarted(cUuid *C.char) C.int {
 	mu.Lock()
 	defer mu.Unlock()
 
-	if instance == nil || !instance.IsRunning() {
+	uuid := C.GoString(cUuid)
+	if instance, ok := instances[uuid]; ok || !instance.IsRunning() {
 		return 0
 	}
 
 	return 1
-}
-
-//export PingConfig
-func PingConfig(jsonConfig *C.char, port int, testingURL *C.char) *C.char {
-	goJSON := C.GoString(jsonConfig)
-	url := C.GoString(testingURL)
-	result := xray.PingConfig(goJSON, port, url)
-
-	return C.CString(result.ToString())
-}
-
-//export Ping
-func Ping(port C.int, testingURL *C.char) *C.char {
-	url := C.GoString(testingURL)
-	ping := xray.Ping(int(port), url)
-
-	return C.CString(ping.ToString())
 }
 
 //export GetXrayCoreVersion

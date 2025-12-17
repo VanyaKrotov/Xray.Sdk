@@ -16,7 +16,7 @@ const (
 )
 
 func PingConfig(jsonConfig string, port int, testingURL string) *transfer.Response {
-	instance, response := StartServer(jsonConfig)
+	instance, response := Start(jsonConfig)
 	if !response.IsSuccess() {
 		return response
 	}

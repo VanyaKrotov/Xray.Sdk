@@ -22,7 +22,7 @@ var config = new XrayConfig()
     {
         new HttpInbound()
         {
-            Port = 8080,
+            Port = 8081,
             Tag = "Tag",
         },
         new DokodemoDoorInbound()
@@ -37,12 +37,15 @@ var config = new XrayConfig()
     },
     Outbounds = new List<Outbound>
     {
-        new VlessOutbound() { },
-        new WireguardOutbound() {}
+        new FreedomOutbound()
+        {
+            Tag = "freedom"
+        }
     },
     Api = new ApiConfig()
     {
-        Listen = "http://localhost:8080",
+        Tag = "api",
+        Listen = "localhost:10022",
         Services = new List<string>()
         {
             ApiServices.Handler,
@@ -56,59 +59,19 @@ var config = new XrayConfig()
     }
 };
 
-var export = config.ToJson();
-var import = XrayConfig.FromJson(@"
-    {
-  ""log"": {
-    ""loglevel"": ""warning""
-  },
-  ""inbounds"": [
-    {
-      ""tag"": ""Shadowsocks TCP"",
-      ""listen"": ""0.0.0.0"",
-      ""port"": 1080,
-      ""protocol"": ""shadowsocks"",
-      ""settings"": {
-        ""clients"": [],
-        ""network"": ""tcp,udp""
-      }
-    }
-  ]
-}
-");
+var processCore = new XrayProcessCore(new XrayProcessOptions()
+{
+    WorkingDirectory = "C:\\Users\\vanya\\Downloads\\Xray-windows-64"
+});
 
-var reimport = import.ToJson();
+var libCore = new XrayLibCore();
 
-XrayCore.StartServer(import);
+var processVersion = processCore.Version();
 
-Console.WriteLine(import);
+processCore.Start(config);
+processCore.Stop();
 
-// var xtlsClient = new XtlsApi("http://127.0.0.1:8080");
+var version = libCore.Version();
 
-// var res = await xtlsClient.GetInboundUsers(new GetUsersOptions() { Tag = "default" });
-
-// Console.WriteLine(res);
-
-// // await xtlsClient.RemoveUser("default", "test@test.com");
-
-// var count = await xtlsClient.GetInboundUsersCount("default");
-
-// Console.WriteLine(res);
-
-// // await xtlsClient.AddVlessUser(new AddVlessUser()
-// // {
-// //     Email = "test@test.com",
-// //     Tag = "default",
-// //     Uuid = "test-test-test-test-test-test",
-// // });
-
-// res = await xtlsClient.GetInboundUsers(new GetUsersOptions() { Tag = "default" });
-
-
-// Console.WriteLine(res);
-
-// var stats = await xtlsClient.GetSysStats();
-
-// var online = await xtlsClient.GetUserOnlineStatus("love@example.com");
-
-// Console.WriteLine(online);
+libCore.Start(config);
+libCore.Stop();

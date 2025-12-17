@@ -2,65 +2,71 @@ using System.Runtime.InteropServices;
 
 namespace Xray.Core.Wrappers;
 
-public static class NativeWrapper
+public class NativeWrapper : IDisposable
 {
+    private IntPtr _libHandle;
 
-#if WINDOWS
-    private const string LIB_NAME = "NativeWrapper.dll";
-#elif OSX
-    private const string LIB_NAME = "NativeWrapper.dylib";
-#elif LINUX
-    private const string LIB_NAME = "NativeWrapper.so";
-#else
-    private const string LIB_NAME = "NativeWrapper.dylib";
-#endif
+    private delegate IntPtr StartDelegate(string uuid, string jsonConfig);
+    private delegate IntPtr StopDelegate(string uuid);
+    private delegate int IsStartedDelegate(string uuid);
+    private delegate IntPtr GetVersionDelegate();
+    private StartDelegate _start;
+    private StopDelegate _stop;
+    private IsStartedDelegate _isStarted;
+    private GetVersionDelegate _getVersion;
 
-    public static TypedResponse StartServer(string jsonConfig)
+    private readonly Dictionary<OSPlatform, string> _platformExtensions = new()
     {
-        return ParseTypedResponse(StartServer(jsonConfig));
+        { OSPlatform.OSX, ".dylib" },
+        { OSPlatform.Linux, ".so" },
+        { OSPlatform.Windows, ".dll" },
+    };
 
-        [DllImport(LIB_NAME, CallingConvention = CallingConvention.Cdecl)]
-        static extern IntPtr StartServer(string jsonConfig);
+    private readonly string LIB_NAME = "NativeWrapper";
+
+    public NativeWrapper()
+    {
+        var platformExt = _platformExtensions.SingleOrDefault(x => RuntimeInformation.IsOSPlatform(x.Key)).Value;
+        if (string.IsNullOrEmpty(platformExt))
+        {
+            throw new PlatformNotSupportedException();
+        }
+
+        _libHandle = NativeLibrary.Load(LIB_NAME + platformExt);
+
+        _start = Marshal.GetDelegateForFunctionPointer<StartDelegate>(NativeLibrary.GetExport(_libHandle, "Start"));
+        _stop = Marshal.GetDelegateForFunctionPointer<StopDelegate>(NativeLibrary.GetExport(_libHandle, "Stop"));
+        _isStarted = Marshal.GetDelegateForFunctionPointer<IsStartedDelegate>(NativeLibrary.GetExport(_libHandle, "IsStarted"));
+        _getVersion = Marshal.GetDelegateForFunctionPointer<GetVersionDelegate>(NativeLibrary.GetExport(_libHandle, "GetXrayCoreVersion"));
     }
 
-    public static TypedResponse StopServer()
+    public TypedResponse Start(Guid guid, string jsonConfig)
     {
-        return ParseTypedResponse(StopServer());
-
-        [DllImport(LIB_NAME, CallingConvention = CallingConvention.Cdecl)]
-        static extern IntPtr StopServer();
+        return ParseTypedResponse(_start(guid.ToString(), jsonConfig));
     }
 
-    public static bool IsServerStarted()
+    public TypedResponse Stop(Guid guid)
     {
-        return IsStarted() == 1;
-
-        [DllImport(LIB_NAME, CallingConvention = CallingConvention.Cdecl)]
-        static extern int IsStarted();
+        return ParseTypedResponse(_stop(guid.ToString()));
     }
 
-    public static TypedResponse PingConfig(string jsonConfig, int port, string testingUrl)
+    public bool IsStarted(Guid guid)
     {
-        return ParseTypedResponse(PingConfig(jsonConfig, port, testingUrl));
-
-        [DllImport(LIB_NAME, CallingConvention = CallingConvention.Cdecl)]
-        static extern IntPtr PingConfig(string jsonConfig, int port, string testingUrl);
+        return _isStarted(guid.ToString()) == 1;
     }
 
-    public static TypedResponse Ping(int port, string testingUrl)
+    public string GetVersion()
     {
-        return ParseTypedResponse(Ping(port, testingUrl));
-
-        [DllImport(LIB_NAME, CallingConvention = CallingConvention.Cdecl)]
-        static extern IntPtr Ping(int port, string testingUrl);
+        return Marshal.PtrToStringAnsi(_getVersion())!;
     }
 
-    public static string GetVersion()
+    public void Dispose()
     {
-        return Marshal.PtrToStringAnsi(GetXrayCoreVersion())!;
-
-        [DllImport(LIB_NAME, CallingConvention = CallingConvention.Cdecl)]
-        static extern IntPtr GetXrayCoreVersion();
+        if (_libHandle != IntPtr.Zero)
+        {
+            NativeLibrary.Free(_libHandle);
+            _libHandle = IntPtr.Zero;
+        }
     }
 
     public class TypedResponse
@@ -75,8 +81,12 @@ public static class NativeWrapper
     private static TypedResponse ParseTypedResponse(IntPtr ptr)
     {
         string raw = Marshal.PtrToStringAnsi(ptr) ?? "";
-        var parts = raw.Split('|', 2);
+        string[]? parts = raw.Split('|', 2);
 
-        return new TypedResponse() { Code = int.TryParse(parts[0], out var c) ? c : -1, Message = parts.Length > 1 ? parts[1] : "" };
+        return new TypedResponse()
+        {
+            Code = int.TryParse(parts[0], out var c) ? c : -1,
+            Message = parts.Length > 1 ? parts[1] : ""
+        };
     }
 }
