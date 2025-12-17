@@ -50,7 +50,6 @@ public class XrayConfig
     [JsonPropertyName("burstObservatory")]
     public BurstObservatoryConfig? BurstObservatory { get; set; }
 
-
     private static JsonSerializerOptions _options = new JsonSerializerOptions()
     {
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,

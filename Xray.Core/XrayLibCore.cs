@@ -12,11 +12,6 @@ public class XrayLibCore : IXrayLibCore
 
     public string Version() => _lib.GetVersion();
 
-    public bool TryStart(XrayConfig config)
-    {
-        return _lib.Start(_guid, config.ToJson()).IsSuccess;
-    }
-
     public void Start(XrayConfig config)
     {
         HandleResponse(_lib.Start(_guid, config.ToJson()));

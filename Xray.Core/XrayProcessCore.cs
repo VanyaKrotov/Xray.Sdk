@@ -29,6 +29,46 @@ public class XrayProcessCore : IXrayProcessCore
         return "unknown";
     }
 
+    public async Task StartAsync(XrayConfig config)
+    {
+        if (IsStarted())
+        {
+            throw new Exception("Xray already started");
+        }
+
+        var process = CreateProcess("run", "-config", "stdin:");
+
+        await process.StandardInput.WriteAsync(config.ToJson());
+        await process.StandardInput.FlushAsync();
+
+        process.StandardInput.Close();
+
+        if (process.HasExited)
+        {
+            var result = await Task.WhenAll(process.StandardError.ReadToEndAsync(), process.StandardOutput.ReadToEndAsync());
+
+            await process.WaitForExitAsync();
+
+            throw new Exception($"Failure xray start operation. Output: {result[0] ?? result[1] ?? "empty"}");
+        }
+
+        _coreProcess = process;
+    }
+
+    public async Task StopAsync()
+    {
+        if (!IsStarted())
+        {
+            return;
+        }
+
+        _coreProcess!.Kill();
+
+        await _coreProcess.WaitForExitAsync();
+
+        _coreProcess = null;
+    }
+
     public void Start(XrayConfig config)
     {
         if (IsStarted())
@@ -36,7 +76,12 @@ public class XrayProcessCore : IXrayProcessCore
             throw new Exception("Xray already started");
         }
 
-        var process = StartCoreProcess(config);
+        var process = CreateProcess("run", "-config", "stdin:");
+
+        process.StandardInput.Write(config.ToJson());
+        process.StandardInput.Flush();
+        process.StandardInput.Close();
+
         if (process.HasExited)
         {
             var error = process.StandardError.ReadToEnd();
@@ -48,24 +93,6 @@ public class XrayProcessCore : IXrayProcessCore
         }
 
         _coreProcess = process;
-    }
-
-    public bool TryStart(XrayConfig config)
-    {
-        if (IsStarted())
-        {
-            return false;
-        }
-
-        var process = StartCoreProcess(config);
-        if (process.HasExited)
-        {
-            return false;
-        }
-
-        _coreProcess = process;
-
-        return true;
     }
 
     public bool IsStarted()
@@ -85,15 +112,14 @@ public class XrayProcessCore : IXrayProcessCore
         _coreProcess = null;
     }
 
-    private Process StartCoreProcess(XrayConfig config)
+    public void Dispose()
     {
-        var process = CreateProcess("run", "-config", "stdin:");
+        if (IsStarted())
+        {
+            Stop();
+        }
 
-        process.StandardInput.Write(config.ToJson());
-        process.StandardInput.Flush();
-        process.StandardInput.Close();
-
-        return process;
+        _coreProcess?.Dispose();
     }
 
     private string RunCommand(params string[] args)
@@ -132,16 +158,6 @@ public class XrayProcessCore : IXrayProcessCore
         process.Start();
 
         return process;
-    }
-
-    public void Dispose()
-    {
-       if(IsStarted())
-        {
-            Stop();
-        }
-
-        _coreProcess?.Dispose();
     }
 }
 
