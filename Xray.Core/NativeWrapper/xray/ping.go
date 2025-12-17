@@ -25,7 +25,7 @@ func PingConfig(jsonConfig string, port int, testingURL string) *transfer.Respon
 	if err != nil {
 		instance.Close()
 
-		return transfer.NewResponse(PingError, err.Error())
+		return transfer.New(PingError, err.Error())
 	}
 
 	timeoutResult := PingProxy(testingURL, proxyUrl)
@@ -51,14 +51,14 @@ func pingWithTransport(testUrl string, transport *http.Transport) *transfer.Resp
 	response, err := http.Head(testUrl)
 	delay := time.Since(start).Milliseconds()
 	if err != nil {
-		return transfer.NewResponse(PingTimeoutError, err.Error())
+		return transfer.New(PingTimeoutError, err.Error())
 	}
 
 	if response.StatusCode == 204 {
-		return transfer.SuccessResponse(strconv.FormatInt(delay, 10))
+		return transfer.Success(strconv.FormatInt(delay, 10))
 	}
 
-	return transfer.NewResponse(PingTimeoutError, "Ping response error")
+	return transfer.New(PingTimeoutError, "Ping response error")
 }
 
 func Ping(port int, testUrl string) *transfer.Response {
@@ -73,7 +73,7 @@ func Ping(port int, testUrl string) *transfer.Response {
 
 	proxyUrl, err := url.Parse(Localhost + strconv.Itoa(port))
 	if err != nil {
-		return transfer.NewResponse(PingError, err.Error())
+		return transfer.New(PingError, err.Error())
 	}
 
 	return PingProxy(testUrl, proxyUrl)

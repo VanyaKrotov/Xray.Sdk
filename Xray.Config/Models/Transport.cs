@@ -30,10 +30,10 @@ public class StreamSettings
     public KcpSettings? KcpSettings { get; set; }
 
     [JsonPropertyName("grpcSettings")]
-    public GRPCSettings? GRPCSettings { get; set; }
+    public GrpcSettings? GrpcSettings { get; set; }
 
     [JsonPropertyName("wsSettings")]
-    public WSSettings? WSSettings { get; set; }
+    public WsSettings? WsSettings { get; set; }
 
     [JsonPropertyName("httpupgradeSettings")]
     public HttpUpgradeSettings? HttpUpgradeSettings { get; set; }
@@ -222,10 +222,10 @@ public class RawSettings
     public bool AcceptProxyProtocol { get; set; }
 
     [JsonPropertyName("header")]
-    public SettingsHeaders? Header { get; set; }
+    public SettingsHeaders Header { get; set; } = new();
 }
 
-public abstract class SettingsHeaders
+public class SettingsHeaders
 {
     [JsonPropertyName("type")]
     public RawHeadersType Type { get; set; } = RawHeadersType.None;
@@ -234,7 +234,7 @@ public abstract class SettingsHeaders
     public HttpRequest? Request { get; set; }
 
     [JsonPropertyName("response")]
-    public HttpRequest? HttpResponse { get; set; }
+    public HttpResponse? HttpResponse { get; set; }
 }
 
 public class HttpRequest
@@ -267,7 +267,8 @@ public class HttpResponse
     public HttpHeaders? Headers { get; set; }
 }
 
-public class XHttpSettings
+
+public abstract class HostedSettings
 {
     [JsonPropertyName("host")]
     public string? Host { get; set; }
@@ -275,14 +276,17 @@ public class XHttpSettings
     [JsonPropertyName("path")]
     public string? Path { get; set; }
 
+    [JsonPropertyName("headers")]
+    public HttpHeaders? Headers { get; set; }
+}
+
+public class XHttpSettings : HostedSettings
+{
     [JsonPropertyName("mode")]
     public string? Mode { get; set; }
 
     [JsonPropertyName("extra")]
     public XHttpExtraSettings? Extra { get; set; }
-
-    [JsonPropertyName("headers")]
-    public HttpHeaders? Headers { get; set; }
 }
 
 public class XHttpExtraSettings
@@ -372,13 +376,13 @@ public class KcpSettings
     public int? WriteBufferSize { get; set; }
 
     [JsonPropertyName("header")]
-    public SettingsHeaders? Header { get; set; }
+    public SettingsHeaders Header { get; set; } = new();
 
     [JsonPropertyName("seed")]
     public string? Seed { get; set; }
 }
 
-public class GRPCSettings
+public class GrpcSettings
 {
     [JsonPropertyName("authority")]
     public string? Authority { get; set; }
@@ -403,34 +407,42 @@ public class GRPCSettings
 
     [JsonPropertyName("initial_windows_size")]
     public int? InitialWindowsSize { get; set; }
+
+    [JsonIgnore]
+    public Dictionary<string, string> Params
+    {
+        get
+        {
+            var dict = new Dictionary<string, string>();
+
+            if (!string.IsNullOrEmpty(ServiceName))
+            {
+                dict["path"] = ServiceName;
+            }
+
+            if (!string.IsNullOrEmpty(Authority))
+            {
+                dict["authority"] = Authority;
+            }
+
+            if (MultiMode)
+            {
+                dict["type"] = "multi";
+            }
+
+            return dict;
+        }
+    }
 }
 
-public class WSSettings
+public class WsSettings : HostedSettings
 {
     [JsonPropertyName("acceptProxyProtocol")]
     public bool? AcceptProxyProtocol { get; set; }
-
-    [JsonPropertyName("path")]
-    public string? Path { get; set; }
-
-    [JsonPropertyName("host")]
-    public string? Host { get; set; }
-
-    [JsonPropertyName("headers")]
-    public HttpHeaders? Headers { get; set; }
 }
 
-public class HttpUpgradeSettings
+public class HttpUpgradeSettings : HostedSettings
 {
     [JsonPropertyName("acceptProxyProtocol")]
     public bool? AcceptProxyProtocol { get; set; }
-
-    [JsonPropertyName("path")]
-    public string? Path { get; set; }
-
-    [JsonPropertyName("host")]
-    public string? Host { get; set; }
-
-    [JsonPropertyName("headers")]
-    public HttpHeaders? Headers { get; set; }
 }

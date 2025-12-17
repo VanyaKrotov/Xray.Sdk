@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using Xray.Core.Exceptions;
 
 namespace Xray.Core.Wrappers;
 
@@ -53,6 +54,36 @@ public static class NativeWrapper
 
         [DllImport(LIB_NAME, CallingConvention = CallingConvention.Cdecl)]
         static extern IntPtr Ping(int port, string testingUrl);
+    }
+
+    public static X25519Keys Gen25519Keys(int port, string testingUrl)
+    {
+        var result = ParseTypedResponse(Curve25519Genkey(port, testingUrl));
+        if (!result.IsSuccess)
+        {
+            throw new CoreException(result.Message, result.Code);
+        }
+
+        var data = result.Message.Split("|");
+
+        return new X25519Keys()
+        {
+            PrivateKey = data[0],
+            Password = data[1],
+            Hash = data[2],
+        };
+
+        [DllImport(LIB_NAME, CallingConvention = CallingConvention.Cdecl)]
+        static extern IntPtr Curve25519Genkey(int port, string testingUrl);
+    }
+
+    public class X25519Keys
+    {
+        public required string PrivateKey { get; set; }
+
+        public required string Password { get; set; }
+
+        public required string Hash { get; set; }
     }
 
     public static string GetVersion()

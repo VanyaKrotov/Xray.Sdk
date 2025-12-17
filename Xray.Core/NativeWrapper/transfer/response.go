@@ -7,12 +7,12 @@ type Response struct {
 	Message string
 }
 
-func NewResponse(code int, message string) *Response {
+func New(code int, message string) *Response {
 	return &Response{Code: code, Message: message}
 }
 
-func SuccessResponse(message string) *Response {
-	return NewResponse(0, message)
+func Success(message string) *Response {
+	return New(0, message)
 }
 
 func (r Response) ToString() string {

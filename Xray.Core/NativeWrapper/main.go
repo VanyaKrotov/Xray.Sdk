@@ -21,7 +21,7 @@ func StartServer(jsonConfig *C.char) *C.char {
 	defer mu.Unlock()
 
 	if instance != nil {
-		return C.CString(transfer.NewResponse(xray.XrayAlreadyStarted, "Xray server already started").ToString())
+		return C.CString(transfer.New(xray.XrayAlreadyStarted, "Xray server already started").ToString())
 	}
 
 	goJSON := C.GoString(jsonConfig)
@@ -45,7 +45,7 @@ func StopServer() *C.char {
 		instance = nil
 	}
 
-	return C.CString(transfer.SuccessResponse("Server stopped").ToString())
+	return C.CString(transfer.Success("Server stopped").ToString())
 }
 
 //export IsStarted
@@ -80,6 +80,14 @@ func Ping(port C.int, testingURL *C.char) *C.char {
 //export GetXrayCoreVersion
 func GetXrayCoreVersion() *C.char {
 	return C.CString(core.Version())
+}
+
+//export Curve25519Genkey
+func Curve25519Genkey(cPrivateKey *C.char) *C.char {
+	privateKey := C.GoString(cPrivateKey)
+	response := xray.Curve25519Genkey(privateKey)
+
+	return C.CString(response.ToString())
 }
 
 func main() {}

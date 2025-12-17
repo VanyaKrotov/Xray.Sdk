@@ -60,7 +60,7 @@ public static class V2RayFormatter
 
             case Enums.StreamNetwork.Ws:
                 {
-                    var ws = stream.WSSettings!;
+                    var ws = stream.WsSettings!;
 
                     query.Add("path", ws.Path);
 
@@ -78,7 +78,7 @@ public static class V2RayFormatter
 
             case Enums.StreamNetwork.Grpc:
                 {
-                    var grpc = stream.GRPCSettings!;
+                    var grpc = stream.GrpcSettings!;
                     if (!string.IsNullOrEmpty(grpc?.ServiceName))
                     {
                         query.Add("serviceName", grpc.ServiceName);
@@ -204,6 +204,42 @@ public static class V2RayFormatter
         return $"vless://{client.Id}@{inbound.Listen}:{inbound.Port}?{query}#{Uri.EscapeDataString(client.Email)}";
     }
 
+    public class VlessLinkOptions
+    {
+        public required string Uuid { get; set; }
+
+        public required int Port { get; set; }
+
+        public required int Address { get; set; }
+
+        public string Remark { get; set; } = string.Empty;
+
+        public required string Security { get; set; }
+
+        public string? Type { get; set; }
+
+        public string? HeaderType { get; set; }
+
+        public string? ServerName { get; set; }
+
+        public string? Host { get; set; }
+
+        public string? Path { get; set; }
+
+        public string? Alpn { get; set; }
+
+        public string? Fingerprint { get; set; }
+
+        public string? Flow { get; set; }
+
+        public string? PublicKey { get; set; }
+
+        public string? ShortId { get; set; }
+
+        public string? Spx { get; set; }
+
+        public string? Pqv { get; set; }
+    }
 
     private static bool GetHost(HttpHeaders headers, out string? host)
     {
@@ -218,4 +254,263 @@ public static class V2RayFormatter
 
         return false;
     }
+}
+
+public abstract class ProtocolSharedFabric
+{
+    public abstract string SharedLink { get; }
+
+    protected Dictionary<string, string> GetStreamSettingsParams(StreamSettings settings)
+    {
+        var dict = new Dictionary<string, string>()
+        {
+            { "type", EnumMemberConvert.ToString(settings.Network) },
+            { "security", EnumMemberConvert.ToString(settings.Security ?? Enums.StreamSecurity.None) },
+        };
+
+        switch (settings.Network)
+        {
+            case Enums.StreamNetwork.Raw:
+                ConvertRawParams(settings.RawSettings!, dict);
+
+                break;
+
+            case Enums.StreamNetwork.Grpc:
+                ConvertGrpcParams(settings.GrpcSettings!, dict);
+
+                break;
+
+            case Enums.StreamNetwork.HttpUpgrade:
+                ConvertHttpUpdateParams(settings.HttpUpgradeSettings!, dict);
+
+                break;
+
+            case Enums.StreamNetwork.Kcp:
+                ConvertKcpParams(settings.KcpSettings!, dict);
+
+                break;
+
+            case Enums.StreamNetwork.Ws:
+                ConvertWsParams(settings.WsSettings!, dict);
+
+                break;
+
+            case Enums.StreamNetwork.XHttp:
+                ConvertXHttpParams(settings.XHttpSettings!, dict);
+
+                break;
+        }
+
+        switch (settings.Security)
+        {
+            case Enums.StreamSecurity.Tls:
+                ConvertTlsParams(settings.TlsSettings!, dict);
+
+                break;
+
+            case Enums.StreamSecurity.Reality:
+                ConvertRealityParams(settings.RealitySettings!, dict);
+
+                break;
+        }
+
+        return dict;
+    }
+
+    protected virtual void ConvertParams(StreamSettings settings, Dictionary<string, string> dict) { }
+
+    protected abstract void ConvertRawParams(RawSettings settings, Dictionary<string, string> dict);
+
+    protected abstract void ConvertTlsParams(TlsSettings settings, Dictionary<string, string> dict);
+
+    protected abstract void ConvertRealityParams(RealitySettings settings, Dictionary<string, string> dict);
+
+    protected abstract void ConvertXHttpParams(XHttpSettings settings, Dictionary<string, string> dict);
+
+    protected abstract void ConvertKcpParams(KcpSettings settings, Dictionary<string, string> dict);
+
+    protected abstract void ConvertGrpcParams(GrpcSettings settings, Dictionary<string, string> dict);
+
+    protected abstract void ConvertWsParams(WsSettings settings, Dictionary<string, string> dict);
+
+    protected abstract void ConvertHttpUpdateParams(HttpUpgradeSettings settings, Dictionary<string, string> dict);
+
+
+    private string ParseHttpHeadersHost(HttpHeaders? headers)
+    {
+        if (headers != null && headers.TryGetValues("host", out var hosts) && hosts.Any())
+        {
+            return hosts.First();
+        }
+
+        return "";
+    }
+
+    protected Dictionary<string, string> ConvertHostedParams(HostedSettings settings)
+    {
+        return new Dictionary<string, string>()
+        {
+            {"path", settings.Path ?? "/"},
+            {"host", string.IsNullOrEmpty(settings.Host) ? ParseHttpHeadersHost(settings.Headers) : settings.Host}
+        };
+    }
+
+    protected Dictionary<string, string> GetSettingsHeadersParams(SettingsHeaders settings)
+    {
+        if (settings.Type != Enums.RawHeadersType.Http || settings.Request == null)
+        {
+            return new();
+        }
+
+        return new Dictionary<string, string>()
+        {
+            {"path", settings.Request.Path?.FirstOrDefault() ?? ""},
+            {"host", ParseHttpHeadersHost(settings.Request.Headers)}
+        };
+    }
+}
+
+
+public class VlessSharedFabric : ProtocolSharedFabric
+{
+    protected readonly VlessInbound _inbound;
+
+    protected readonly VlessClient _client;
+
+    protected readonly VlessSharedOptions _options;
+
+    public VlessSharedFabric(VlessInbound inbound, VlessClient client, VlessSharedOptions option)
+    {
+        _inbound = inbound;
+        _client = client;
+        _options = option;
+    }
+
+    public VlessSharedFabric(VlessInbound inbound, string email, VlessSharedOptions option)
+    {
+        var client = inbound.Settings.Clients.SingleOrDefault(c => c.Email == email);
+        if (client == null)
+        {
+            throw new ArgumentException($"Client by email = {email} not found");
+        }
+
+        _inbound = inbound;
+        _options = option;
+        _client = client;
+    }
+
+    public virtual string GetRemark()
+    {
+        return "";
+    }
+
+    public override string SharedLink => throw new NotImplementedException();
+
+    protected override void ConvertParams(StreamSettings settings, Dictionary<string, string> dict)
+    {
+        base.ConvertParams(settings, dict);
+
+        if (settings.Network == Enums.StreamNetwork.Raw)
+        {
+
+        }
+    }
+
+    protected override void ConvertGrpcParams(GrpcSettings settings, Dictionary<string, string> dict)
+    {
+        dict["serviceName"] = settings.ServiceName ?? "";
+        dict["authority"] = settings.Authority ?? "";
+
+        if (settings.MultiMode)
+        {
+            dict["mode"] = "multi";
+        }
+    }
+
+    protected override void ConvertHttpUpdateParams(HttpUpgradeSettings settings, Dictionary<string, string> dict)
+    {
+        ConvertHostedParams(settings, dict);
+    }
+
+    protected override void ConvertKcpParams(KcpSettings settings, Dictionary<string, string> dict)
+    {
+        dict["headerType"] = EnumMemberConvert.ToString(settings.Header.Type);
+        dict["seed"] = settings.Seed ?? "";
+    }
+
+    protected override void ConvertRawParams(RawSettings settings, Dictionary<string, string> options)
+    {
+        GetSettingsHeadersParams(settings.Header, options);
+    }
+
+    protected override void ConvertRealityParams(RealitySettings settings, Dictionary<string, string> dict)
+    {
+
+    }
+
+    protected override void ConvertTlsParams(TlsSettings settings, Dictionary<string, string> dict)
+    {
+        if (settings.Alpn != null)
+        {
+            dict["alpn"] = string.Join(",", settings.Alpn);
+        }
+
+        if (!string.IsNullOrEmpty(settings.ServerName))
+        {
+            dict["sni"] = settings.ServerName;
+        }
+
+        if (settings.Fingerprint != null)
+        {
+            dict["fp"] = EnumMemberConvert.ToString((Enums.Fingerprint)settings.Fingerprint);
+        }
+
+        if (settings.AllowInsecure)
+        {
+            dict["allowInsecure"] = "1";
+        }
+    }
+
+    protected override void ConvertWsParams(WsSettings settings, Dictionary<string, string> dict)
+    {
+        ConvertHostedParams(settings, dict);
+    }
+
+    protected override void ConvertXHttpParams(XHttpSettings settings, Dictionary<string, string> dict)
+    {
+        ConvertHostedParams(settings, dict);
+
+        dict["mode"] = settings.Mode ?? "";
+    }
+}
+
+public class VlessSharedOptions
+{
+    public required string Remark { get; set; }
+
+    public required string Address { get; set; }
+
+    public int Port { get; set; }
+
+    public string? ServerName { get; set; }
+
+    public string? Host { get; set; }
+
+    public string? Path { get; set; }
+
+    public Enums.StreamSecurity? Security { get; set; }
+
+    public Enums.Fingerprint? Fingerprint { get; set; }
+
+    public string? FragmentSettings { get; set; }
+
+    public string? NoiseSettings { get; set; }
+
+    public bool AllowInsecure { get; set; }
+
+    public bool MuxEnabled { get; set; }
+
+    public bool RandomUseragent { get; set; }
+
+    public bool UseSNIAsHost { get; set; }
 }

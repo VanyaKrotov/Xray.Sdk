@@ -231,20 +231,50 @@ public class HttpInbound : Inbound
     public HttpSettings? Settings { get; set; }
 }
 
-public class ShadowSocksInbound : Inbound
-{
-    public ShadowSocksInbound() : base(InboundProtocol.ShadowSocks) { }
-
-    [JsonPropertyName("settings")]
-    public ShadowSocksSettings? Settings { get; set; }
-}
-
 public class SocksInbound : Inbound
 {
     public SocksInbound() : base(InboundProtocol.Socks) { }
 
     [JsonPropertyName("settings")]
     public SocksSettings Settings { get; set; } = new();
+}
+
+public abstract class SharedInbound : Inbound
+{
+    protected SharedInbound(InboundProtocol protocol) : base(protocol) { }
+
+    [JsonIgnore]
+    public abstract string SharedLink { get; }
+}
+
+public class ShadowSocksInbound : SharedInbound
+{
+    public ShadowSocksInbound() : base(InboundProtocol.ShadowSocks) { }
+
+    [JsonPropertyName("settings")]
+    public ShadowSocksSettings? Settings { get; set; }
+
+    public override string SharedLink => throw new NotImplementedException();
+}
+
+public class VlessInbound : SharedInbound
+{
+    public VlessInbound() : base(InboundProtocol.Vless) { }
+
+    [JsonPropertyName("settings")]
+    public VlessSettings Settings { get; set; } = new();
+
+    public override string SharedLink => throw new NotImplementedException();
+}
+
+public class VMessInbound : SharedInbound
+{
+    public VMessInbound() : base(InboundProtocol.VMess) { }
+
+    [JsonPropertyName("settings")]
+    public VMessSettings Settings { get; set; } = new();
+
+    public override string SharedLink => throw new NotImplementedException();
 }
 
 public class TrojanInbound : Inbound
@@ -255,33 +285,19 @@ public class TrojanInbound : Inbound
     public TrojanSettings Settings { get; set; } = new();
 }
 
-public class VlessInbound : Inbound
-{
-    public VlessInbound() : base(InboundProtocol.Vless) { }
-
-    [JsonPropertyName("settings")]
-    public VlessSettings Settings { get; set; } = new();
-}
-
-public class VMessInbound : Inbound
-{
-    public VMessInbound() : base(InboundProtocol.VMess) { }
-
-    [JsonPropertyName("settings")]
-    public VMessSettings Settings { get; set; } = new();
-}
-
-public class WireguardInbound : Inbound
+public class WireguardInbound : SharedInbound
 {
     public WireguardInbound() : base(InboundProtocol.Wireguard) { }
 
     [JsonPropertyName("settings")]
     public WireguardSettings? Settings { get; set; }
+
+    public override string SharedLink => throw new NotImplementedException();
 }
 
 // convertors
 
-public class InboundConfigConverter : JsonConverter<Inbound>
+class InboundConfigConverter : JsonConverter<Inbound>
 {
     private static readonly Dictionary<InboundProtocol, Type> _protocolMap = new()
     {
