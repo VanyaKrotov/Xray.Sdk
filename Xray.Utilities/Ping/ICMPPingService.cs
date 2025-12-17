@@ -1,7 +1,7 @@
 using System.Net.NetworkInformation;
 using System.Text;
 
-namespace Xray.Core.Utilities;
+namespace Xray.Utilities.Ping;
 
 public class ICMPPingService
 {

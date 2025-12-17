@@ -1,4 +1,4 @@
-namespace Xray.Core.Models;
+namespace Xray.Utilities.Ping;
 
 public class PingOptions
 {

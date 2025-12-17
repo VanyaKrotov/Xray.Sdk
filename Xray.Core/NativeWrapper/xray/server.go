@@ -26,29 +26,29 @@ const (
 func Start(jsonConfig string) (*core.Instance, *transfer.Response) {
 	var cfg iconf.Config
 	if err := json.Unmarshal([]byte(jsonConfig), &cfg); err != nil {
-		return nil, transfer.NewResponse(JsonParseError, err.Error())
+		return nil, transfer.New(JsonParseError, err.Error())
 	}
 
 	coreCfg, err := cfg.Build()
 	if err != nil {
-		return nil, transfer.NewResponse(LoadConfigError, err.Error())
+		return nil, transfer.New(LoadConfigError, err.Error())
 	}
 
 	instance, err := core.New(coreCfg)
 	if err != nil {
 		log.Printf("Xray init error: %v", err)
 
-		return nil, transfer.NewResponse(InitXrayError, err.Error())
+		return nil, transfer.New(InitXrayError, err.Error())
 	}
 
 	if err := instance.Start(); err != nil {
 		instance.Close()
 		log.Printf("Xray start error: %v", err)
 
-		return nil, transfer.NewResponse(StartXrayError, err.Error())
+		return nil, transfer.New(StartXrayError, err.Error())
 	}
 
-	return instance, transfer.SuccessResponse("Server started")
+	return instance, transfer.Success("Server started")
 }
 
 func Stop(instance *core.Instance) {

@@ -26,7 +26,7 @@ func Start(cUuid *C.char, cJson *C.char) *C.char {
 
 	uuid := C.GoString(cUuid)
 	if _, ok := instances[uuid]; ok {
-		return C.CString(transfer.NewResponse(xray.XrayAlreadyStarted, "Xray server already started").ToString())
+		return C.CString(transfer.New(xray.XrayAlreadyStarted, "Xray server already started").ToString())
 	}
 
 	json := C.GoString(cJson)
@@ -49,7 +49,7 @@ func Stop(cUuid *C.char) *C.char {
 		delete(instances, uuid)
 	}
 
-	return C.CString(transfer.SuccessResponse("Server stopped").ToString())
+	return C.CString(transfer.Success("Server stopped").ToString())
 }
 
 //export IsStarted
