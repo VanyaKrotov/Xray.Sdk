@@ -59,19 +59,27 @@ var config = new XrayConfig()
     }
 };
 
-var processCore = new XrayProcessCore(new XrayProcessOptions()
+// var processCore = new XrayProcessCore(new XrayProcessOptions()
+// {
+//     WorkingDirectory = "C:\\Users\\vanya\\Downloads\\Xray-windows-64"
+// });
+
+var libCore = new XrayLibCore(new XrayLibOptions()
 {
-    WorkingDirectory = "C:\\Users\\vanya\\Downloads\\Xray-windows-64"
+    LibPath = "native/windows_amd64.dll"
 });
 
-var libCore = new XrayLibCore();
+// var processVersion = processCore.Version();
 
-var processVersion = processCore.Version();
-
-processCore.Start(config);
-processCore.Stop();
+// processCore.Start(config);
+// processCore.Stop();
 
 var version = libCore.Version();
 
+Console.WriteLine($"Version: {version}");
+
 libCore.Start(config);
 libCore.Stop();
+
+Console.WriteLine("Press key to close this window");
+Console.ReadKey();

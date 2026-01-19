@@ -7,34 +7,8 @@
     <RuntimeIdentifiers>win-x64;osx-x64;osx-arm64;linux-x64;linux-arm64</RuntimeIdentifiers>
   </PropertyGroup>
 
-  <Target Name="BuildNativeWrapper" BeforeTargets="Build">
-    <Exec Condition="'$(OS)' == 'Windows_NT'"
-      WorkingDirectory="$(MSBuildProjectDirectory)\NativeWrapper"
-      Command="cmd /c build.bat $(OutputPath)" />
-    
-    <Exec Condition="'$(OS)' != 'Windows_NT'"
-      WorkingDirectory="$(MSBuildProjectDirectory)/NativeWrapper"
-      Command="bash ./build.sh $(OutputPath)" />
-  </Target>
-
   <ItemGroup>
     <ProjectReference Include="..\Xray.Config\Xray.Config.csproj" />
-  </ItemGroup>
-
-  <!-- Linking lib files -->
-  <ItemGroup Condition="Exists('$(OutputPath)NativeWrapper.dll')">
-    <None Include="$(OutputPath)NativeWrapper.dll" CopyToOutputDirectory="PreserveNewest"
-      Link="NativeWrapper.dll" />
-  </ItemGroup>
-
-  <ItemGroup Condition="Exists('$(OutputPath)NativeWrapper.so')">
-    <None Include="$(OutputPath)NativeWrapper.so" CopyToOutputDirectory="PreserveNewest"
-      Link="NativeWrapper.so" />
-  </ItemGroup>
-
-  <ItemGroup Condition="Exists('$(OutputPath)NativeWrapper.dylib')">
-    <None Include="$(OutputPath)NativeWrapper.dylib" CopyToOutputDirectory="PreserveNewest"
-      Link="NativeWrapper.dylib" />
   </ItemGroup>
 
 </Project>

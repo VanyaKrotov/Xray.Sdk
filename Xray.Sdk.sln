@@ -13,8 +13,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xray.Core", "Xray.Core\Xray
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xray.Config", "Xray.Config\Xray.Config.csproj", "{123435EA-9B3D-43EB-BFA0-57031CE83FE7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xray.Utilities", "Xray.Utilities\Xray.Utilities.csproj", "{078FCDD8-6EA6-47DB-A9C3-16314A0FD369}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -85,18 +83,6 @@ Global
 		{123435EA-9B3D-43EB-BFA0-57031CE83FE7}.Release|x64.Build.0 = Release|Any CPU
 		{123435EA-9B3D-43EB-BFA0-57031CE83FE7}.Release|x86.ActiveCfg = Release|Any CPU
 		{123435EA-9B3D-43EB-BFA0-57031CE83FE7}.Release|x86.Build.0 = Release|Any CPU
-		{078FCDD8-6EA6-47DB-A9C3-16314A0FD369}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{078FCDD8-6EA6-47DB-A9C3-16314A0FD369}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{078FCDD8-6EA6-47DB-A9C3-16314A0FD369}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{078FCDD8-6EA6-47DB-A9C3-16314A0FD369}.Debug|x64.Build.0 = Debug|Any CPU
-		{078FCDD8-6EA6-47DB-A9C3-16314A0FD369}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{078FCDD8-6EA6-47DB-A9C3-16314A0FD369}.Debug|x86.Build.0 = Debug|Any CPU
-		{078FCDD8-6EA6-47DB-A9C3-16314A0FD369}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{078FCDD8-6EA6-47DB-A9C3-16314A0FD369}.Release|Any CPU.Build.0 = Release|Any CPU
-		{078FCDD8-6EA6-47DB-A9C3-16314A0FD369}.Release|x64.ActiveCfg = Release|Any CPU
-		{078FCDD8-6EA6-47DB-A9C3-16314A0FD369}.Release|x64.Build.0 = Release|Any CPU
-		{078FCDD8-6EA6-47DB-A9C3-16314A0FD369}.Release|x86.ActiveCfg = Release|Any CPU
-		{078FCDD8-6EA6-47DB-A9C3-16314A0FD369}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

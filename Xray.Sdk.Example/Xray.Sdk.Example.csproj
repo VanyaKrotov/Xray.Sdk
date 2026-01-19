@@ -14,4 +14,10 @@
     <ProjectReference Include="..\Xray.Core\Xray.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="native\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
