@@ -425,8 +425,14 @@ public abstract class Outbound
         public DomainStrategy? DomainStrategy { get; set; }
     }
 
-    public class Hysteria2Settings
+    public class HysteriaSettings
     {
+        /// <summary>
+        /// Version of protocol
+        /// </summary>
+        [JsonPropertyName("version")]
+        public int? Version { get; set; }
+
         /// <summary>
         /// Hysteria2 proxy server address.
         /// </summary>
@@ -491,7 +497,7 @@ class OutboundConfigConverter : JsonConverter<Outbound>
         { OutboundProtocol.Vless, typeof(VlessOutbound) },
         { OutboundProtocol.VMess, typeof(VMessOutbound) },
         { OutboundProtocol.Wireguard, typeof(WireguardOutbound) },
-        { OutboundProtocol.Hysteria2, typeof(Hysteria2Outbound) },
+        { OutboundProtocol.Hysteria, typeof(HysteriaOutbound) },
     };
 
     public override Outbound Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)

@@ -68,6 +68,6 @@ public enum OutboundProtocol
     [EnumMember(Value = "wireguard")]
     Wireguard,
     
-    [EnumMember(Value = "hysteria2")]
-    Hysteria2
+    [EnumMember(Value = "hysteria")]
+    Hysteria
 }
