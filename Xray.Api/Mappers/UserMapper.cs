@@ -4,11 +4,11 @@ namespace Xray.Api.Mappers;
 
 public static class UserMapper
 {
-    private readonly static Dictionary<string, Func<Xray.Common.Protocol.User, BaseUser>> _userDecoders = new Dictionary<string, Func<Xray.Common.Protocol.User, BaseUser>>()
+    private readonly static Dictionary<string, Func<Common.Protocol.User, BaseUser>> _userDecoders = new Dictionary<string, Func<Common.Protocol.User, BaseUser>>()
     {
-        {Xray.Proxy.Trojan.Account.Descriptor.FullName, (user) =>
+        {Proxy.Trojan.Account.Descriptor.FullName, (user) =>
             {
-                var account = Xray.Proxy.Trojan.Account.Parser.ParseFrom(user.Account.Value);
+                var account = Proxy.Trojan.Account.Parser.ParseFrom(user.Account.Value);
 
                 return new TrojanUser()
                 {
@@ -18,9 +18,9 @@ public static class UserMapper
                 };
             }
         },
-        {Xray.Proxy.Vless.Account.Descriptor.FullName, (user) =>
+        {Proxy.Vless.Account.Descriptor.FullName, (user) =>
             {
-                var account = Xray.Proxy.Vless.Account.Parser.ParseFrom(user.Account.Value);
+                var account = Proxy.Vless.Account.Parser.ParseFrom(user.Account.Value);
 
                 return new VlessUser()
                 {
@@ -36,9 +36,9 @@ public static class UserMapper
                 };
             }
         },
-        {Xray.Proxy.Shadowsocks.Account.Descriptor.FullName, (user) =>
+        {Proxy.Shadowsocks.Account.Descriptor.FullName, (user) =>
             {
-                var account = Xray.Proxy.Shadowsocks.Account.Parser.ParseFrom(user.Account.Value);
+                var account = Proxy.Shadowsocks.Account.Parser.ParseFrom(user.Account.Value);
 
                 return new ShadowSocksUser()
                 {
@@ -50,9 +50,9 @@ public static class UserMapper
                 };
             }
         },
-        {Xray.Proxy.Shadowsocks2022.Account.Descriptor.FullName, (user) =>
+        {Proxy.Shadowsocks2022.Account.Descriptor.FullName, (user) =>
             {
-                var account = Xray.Proxy.Shadowsocks2022.Account.Parser.ParseFrom(user.Account.Value);
+                var account = Proxy.Shadowsocks2022.Account.Parser.ParseFrom(user.Account.Value);
 
                 return new ShadowSocks2022User()
                 {
@@ -62,9 +62,9 @@ public static class UserMapper
                 };
             }
         },
-        {Xray.Proxy.Socks.Account.Descriptor.FullName, (user) =>
+        {Proxy.Socks.Account.Descriptor.FullName, (user) =>
             {
-                var account = Xray.Proxy.Socks.Account.Parser.ParseFrom(user.Account.Value);
+                var account = Proxy.Socks.Account.Parser.ParseFrom(user.Account.Value);
 
                 return new SocksUser()
                 {
@@ -75,9 +75,9 @@ public static class UserMapper
                 };
             }
         },
-        {Xray.Proxy.Http.Account.Descriptor.FullName,(user) =>
+        {Proxy.Http.Account.Descriptor.FullName,(user) =>
             {
-                var account = Xray.Proxy.Http.Account.Parser.ParseFrom(user.Account.Value);
+                var account = Proxy.Http.Account.Parser.ParseFrom(user.Account.Value);
 
                 return new HttpUser()
                 {
@@ -90,7 +90,7 @@ public static class UserMapper
         },
     };
 
-    public static BaseUser Decode(Xray.Common.Protocol.User user)
+    public static BaseUser Decode(Common.Protocol.User user)
     {
         if (!_userDecoders.ContainsKey(user.Account.Type))
         {

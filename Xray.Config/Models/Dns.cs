@@ -4,68 +4,142 @@ using Xray.Config.Enums;
 
 namespace Xray.Config.Models;
 
-public class DnsConfig
+/// <summary>
+/// Config for Built-in DNS server.
+/// <para><see href="https://xtls.github.io/en/config/dns.html">Docs</see></para>
+/// </summary>
+public class DnsConfig : CommonRules
 {
+    /// <summary>
+    /// A list of static IP addresses, with values consisting of a series of "domain": "address" or "domain": ["address 1","address 2"]. The address can be an IP or a domain name.
+    /// </summary>
     [JsonPropertyName("hosts")]
+    [JsonConverter(typeof(DnsHostsJsonConverter))]
     public Dictionary<string, List<string>>? Hosts { get; set; }
 
+    /// <summary>
+    /// A list of DNS servers that supports two types: DNS addresses (in string format) and <see href="https://xtls.github.io/en/config/dns.html#dnsserverobject">DnsServerObject</see>.
+    /// </summary>
     [JsonPropertyName("servers")]
     [JsonConverter(typeof(DnsServersJsonConverter))]
     public List<DnsServer>? Servers { get; set; }
 
-    [JsonPropertyName("clientIp")]
-    public string? ClientIP { get; set; }
-
+    /// <summary>
+    /// Strategy for handling DNS rules. The default value is <b>UseIP</b>.
+    /// </summary>
     [JsonPropertyName("queryStrategy")]
     public DnsQueryStrategy? QueryStrategy { get; set; }
 
-    [JsonPropertyName("disableCache")]
-    public bool DisableCache { get; set; }
-
+    /// <summary>
+    /// <b>true</b> disables fallback DNS queries, default is <b>false</b> which means fallback queries are not disabled.
+    /// </summary>
     [JsonPropertyName("disableFallback")]
     public bool DisableFallback { get; set; }
 
+    /// <summary>
+    /// <b>true</b> disables fallback DNS queries when the matching domain list of the DNS server is hit, default is <b>false</b> which means fallback queries are not disabled.
+    /// </summary>
     [JsonPropertyName("disableFallbackIfMatch")]
     public bool DisableFallbackIfMatch { get; set; }
 
+    /// <summary>
+    /// if <b>true</b>, system-hosts appends to config-hosts at start, default is <b>false</b>.
+    /// </summary>
     [JsonPropertyName("useSystemHosts")]
     public bool UseSystemHosts { get; set; }
-
-    [JsonPropertyName("tag")]
-    public string? Tag { get; set; }
 }
 
-public class DnsServer
+public class DnsServer : CommonRules
 {
+    /// <summary>
+    /// A list of DNS servers, which can be either DNS addresses (in string form) or DnsServerObjects.
+    /// </summary>
     [JsonPropertyName("address")]
     public string? Address { get; set; }
 
+    /// <summary>
+    /// The port number of the DNS server, such as 53. If not specified, the default is 53. This item is not applicable when using DOH, DOHL, or DOQL modes, and non-standard ports should be specified in the URL.
+    /// </summary>
     [JsonPropertyName("port")]
     public int? Port { get; set; }
 
+    /// <summary>
+    /// A list of domain names. The domain names in this list will be queried using this server first. The format of domain names is the same as in <see href="https://xtls.github.io/en/config/routing.html#ruleobject">routing configuration</see>.
+    /// </summary>
     [JsonPropertyName("domains")]
     public List<string>? Domains { get; set; }
 
+    /// <summary>
+    /// A list of IP ranges, formatted the same as in the <see href="https://xtls.github.io/en/config/routing.html#ruleobject">routing configuration</see>.
+    /// </summary>
     [JsonPropertyName("expectedIPs")]
     public List<string>? ExpectedIPs { get; set; }
 
+    /// <summary>
+    /// The reverse version, removing the IPs included in this list. The asterisk has the same effect.
+    /// </summary>
+    [JsonPropertyName("unexpectedIPs")]
+    public List<string>? UnexpectedIPs { get; set; }
+
+    /// <summary>
+    /// <b>true</b> — skip this server when performing DNS fallback requests. The default value is <b>false</b> (do not skip).
+    /// </summary>
     [JsonPropertyName("skipFallback")]
     public bool SkipFallback { get; set; }
 
-    [JsonPropertyName("clientIP")]
-    public string? ClientIP { get; set; }
-
+    /// <summary>
+    /// If not specified, it is inherited from the global configuration. If specified, it allows you to further restrict the capabilities of this server, as well as set a default value for IP request types initiated by Xray itself.
+    /// </summary>
     [JsonPropertyName("queryStrategy")]
     public DnsQueryStrategy? QueryStrategy { get; set; }
 
+    /// <summary>
+    /// DNS server timeout. Default is 4000 ms.
+    /// <para>This does not affect localhost DNS (system DNS), which always follows the DNS timeout behavior in Golang (cgo and pure go may differ slightly).</para>
+    /// </summary>
     [JsonPropertyName("timeoutMs")]
     public int? TimeoutMs { get; set; }
 
-    [JsonPropertyName("disableCache")]
-    public bool DisableCache { get; set; }
-
+    /// <summary>
+    /// If <b>true</b>, the request to this DNS server will be the last attempt; fallback will not be initiated.
+    /// </summary>
     [JsonPropertyName("finalQuery")]
     public bool FinalQuery { get; set; }
+}
+
+public abstract class CommonRules
+{
+    /// <summary>
+    /// Traffic generated by built-in DNS, except for localhost, fakedns, TCPL, DOHL, and DOQL modes, can be matched with inboundTag in routing using this identifier.
+    /// </summary>
+    [JsonPropertyName("tag")]
+    public string? Tag { get; set; }
+
+    /// <summary>
+    /// The optimistic cache lifetime in seconds. The default value is 0 (never expires).
+    /// </summary>
+    [JsonPropertyName("serveExpiredTTL")]
+    public long ServeExpiredTTL { get; set; }
+
+    /// <summary>
+    /// Used to notify the server of the specified IP location during DNS queries. Cannot be a private address.
+    /// </summary>
+    [JsonPropertyName("clientIP")]
+    public string? ClientIP { get; set; }
+
+    /// <summary>
+    /// <b>true</b> disables DNS caching for all DNS servers, default is <b>false</b> which means caching is not disabled.
+    /// <para>Current option has no effect on localhost DNS and localhost DNS always use system DNS cache.</para>
+    /// </summary>
+    [JsonPropertyName("disableCache")]
+    public bool? DisableCache { get; set; }
+
+    /// <summary>
+    /// <b>true</b> enables optimistic DNS caching (DNS optimistic caching). The default value is <b>false</b> (not enabled).
+    /// <para>It only works if caching is enabled on the server (depends on <b>DisableCache</b>)</para>
+    /// </summary>
+    [JsonPropertyName("serveStale")]
+    public bool? ServeStale { get; set; }
 }
 
 // convertors
@@ -77,7 +151,9 @@ class DnsServersJsonConverter : JsonConverter<List<DnsServer>>
         var servers = new List<DnsServer>();
 
         if (reader.TokenType != JsonTokenType.StartArray)
+        {
             throw new JsonException("Expected StartArray for servers");
+        }
 
         while (reader.Read())
         {
@@ -117,5 +193,101 @@ class DnsServersJsonConverter : JsonConverter<List<DnsServer>>
         }
 
         writer.WriteEndArray();
+    }
+}
+
+class DnsHostsJsonConverter : JsonConverter<Dictionary<string, List<string>>?>
+{
+    public override Dictionary<string, List<string>>? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TokenType == JsonTokenType.Null)
+        {
+            return null;
+        }
+
+        if (reader.TokenType != JsonTokenType.StartObject)
+        {
+            throw new JsonException("Expected JSON object for Dictionary<string, List<string>>");
+        }
+
+        var result = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+
+        while (reader.Read())
+        {
+            if (reader.TokenType == JsonTokenType.EndObject) { return result; }
+
+            if (reader.TokenType != JsonTokenType.PropertyName) { throw new JsonException("Expected property name"); }
+
+            string key = reader.GetString()!;
+
+            if (!reader.Read()) { throw new JsonException("Unexpected end of JSON"); }
+
+            switch (reader.TokenType)
+            {
+                case JsonTokenType.String:
+                    result[key] = new List<string> { reader.GetString()! };
+
+                    break;
+
+                case JsonTokenType.StartArray:
+                    var list = new List<string>();
+
+                    while (reader.Read())
+                    {
+                        if (reader.TokenType == JsonTokenType.EndArray) { break; }
+
+                        if (reader.TokenType != JsonTokenType.String)
+                        {
+                            throw new JsonException("Expected string inside array");
+                        }
+
+                        list.Add(reader.GetString()!);
+                    }
+
+                    result[key] = list;
+
+                    break;
+
+                case JsonTokenType.Null:
+                    result[key] = new List<string>();
+
+                    break;
+
+                default:
+                    throw new JsonException($"Unsupported token type {reader.TokenType} for value of '{key}'");
+            }
+        }
+
+        throw new JsonException("Unexpected end of JSON while reading dictionary");
+    }
+
+    public override void Write(Utf8JsonWriter writer, Dictionary<string, List<string>>? value, JsonSerializerOptions options)
+    {
+        if (value == null)
+        {
+            writer.WriteNullValue();
+
+            return;
+        }
+
+        writer.WriteStartObject();
+
+        foreach (var kvp in value)
+        {
+            writer.WritePropertyName(kvp.Key);
+            writer.WriteStartArray();
+
+            if (kvp.Value != null)
+            {
+                foreach (var item in kvp.Value)
+                {
+                    writer.WriteStringValue(item);
+                }
+            }
+
+            writer.WriteEndArray();
+        }
+
+        writer.WriteEndObject();
     }
 }
