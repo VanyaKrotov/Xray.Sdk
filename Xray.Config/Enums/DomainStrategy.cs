@@ -4,15 +4,31 @@ using Xray.Config.Utilities;
 
 namespace Xray.Config.Enums;
 
+/// <summary>
+/// Domain name resolution strategy.
+/// </summary>
 [JsonConverter(typeof(EnumMemberConverter<RoutingDomainStrategy>))]
 public enum RoutingDomainStrategy
 {
+    /// <summary>
+    /// Only domain names are used for route selection.
+    /// </summary>
     [EnumMember(Value = "AsIs")]
     AsIs,
 
+    /// <summary>
+    /// If the domain name does not match any rule, the domain name is resolved to an IP address (A record or AAAA record) for re-mapping;
+    /// <list type="bullet">
+    /// <item>If a domain name has multiple A records, an attempt is made to match all A records until one matches some rule;</item>
+    /// <item>The resolved IP address is only used when choosing a route, and the original domain name is still used in the forwarded data packets;</item>
+    /// </list>
+    /// </summary>
     [EnumMember(Value = "IPIfNonMatch")]
     IPIfNonMatch,
 
+    /// <summary>
+    /// If any IP address-based rule is encountered during matching, the domain name is immediately resolved to an IP address for matching;
+    /// </summary>
     [EnumMember(Value = "IPOnDemand")]
     IPOnDemand
 }

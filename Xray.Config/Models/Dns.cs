@@ -6,7 +6,7 @@ namespace Xray.Config.Models;
 
 /// <summary>
 /// Config for Built-in DNS server.
-/// <para><see href="https://xtls.github.io/en/config/dns.html">Docs</see></para>
+/// <para><see href="https://xtls.github.io/config/dns.html">Docs</see></para>
 /// </summary>
 public class DnsConfig : CommonRules
 {
@@ -18,7 +18,7 @@ public class DnsConfig : CommonRules
     public Dictionary<string, List<string>>? Hosts { get; set; }
 
     /// <summary>
-    /// A list of DNS servers that supports two types: DNS addresses (in string format) and <see href="https://xtls.github.io/en/config/dns.html#dnsserverobject">DnsServerObject</see>.
+    /// A list of DNS servers that supports two types: DNS addresses (in string format) and <see href="https://xtls.github.io/config/dns.html#dnsserverobject">DnsServerObject</see>.
     /// </summary>
     [JsonPropertyName("servers")]
     [JsonConverter(typeof(DnsServersJsonConverter))]
@@ -64,13 +64,13 @@ public class DnsServer : CommonRules
     public int? Port { get; set; }
 
     /// <summary>
-    /// A list of domain names. The domain names in this list will be queried using this server first. The format of domain names is the same as in <see href="https://xtls.github.io/en/config/routing.html#ruleobject">routing configuration</see>.
+    /// A list of domain names. The domain names in this list will be queried using this server first. The format of domain names is the same as in <see href="https://xtls.github.io/config/routing.html#ruleobject">routing configuration</see>.
     /// </summary>
     [JsonPropertyName("domains")]
     public List<string>? Domains { get; set; }
 
     /// <summary>
-    /// A list of IP ranges, formatted the same as in the <see href="https://xtls.github.io/en/config/routing.html#ruleobject">routing configuration</see>.
+    /// A list of IP ranges, formatted the same as in the <see href="https://xtls.github.io/config/routing.html#ruleobject">routing configuration</see>.
     /// </summary>
     [JsonPropertyName("expectedIPs")]
     public List<string>? ExpectedIPs { get; set; }

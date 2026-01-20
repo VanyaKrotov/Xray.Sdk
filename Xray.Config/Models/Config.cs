@@ -5,7 +5,7 @@ namespace Xray.Config.Models;
 
 /// <summary>
 /// The configuration file of Xray is in JSON format, and the configuration format for the client and server is the same, except for the actual configuration content.
-/// <para><see href="https://xtls.github.io/en/config">Docs</see></para>
+/// <para><see href="https://xtls.github.io/config">Docs</see></para>
 /// </summary>
 public class XrayConfig
 {
@@ -34,7 +34,7 @@ public class XrayConfig
     public DnsConfig? Dns { get; set; }
 
     /// <summary>
-    /// ?
+    /// Configures routing. Specify rules to route connections through different outbounds.
     /// </summary>
     [JsonPropertyName("routing")]
     public RoutingConfig? Routing { get; set; }

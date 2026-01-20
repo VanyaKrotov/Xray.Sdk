@@ -4,7 +4,7 @@ namespace Xray.Config.Models;
 
 /// <summary>
 /// A local policy that allows you to configure different user levels and corresponding policies.
-/// <para><see href="https://xtls.github.io/ru/config/policy.html">Docs</see></para>
+/// <para><see href="https://xtls.github.io/config/policy.html">Docs</see></para>
 /// </summary>
 public class PolicyConfig
 {

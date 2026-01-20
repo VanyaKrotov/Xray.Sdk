@@ -4,7 +4,7 @@ namespace Xray.Config.Models;
 
 /// <summary>
 /// The connection monitoring component uses HTTP pings to check the connection status of outbound proxies.
-/// <para><see href="https://xtls.github.io/ru/config/observatory.html">Docs</see></para>
+/// <para><see href="https://xtls.github.io/config/observatory.html">Docs</see></para>
 /// </summary>
 public class ObservatoryConfig
 {

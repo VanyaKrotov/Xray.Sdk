@@ -5,7 +5,7 @@ namespace Xray.Config.Models;
 
 /// <summary>
 /// Log configuration controls how Xray outputs logs.
-/// <para><see href="https://xtls.github.io/en/config/log.html">Docs</see></para>
+/// <para><see href="https://xtls.github.io/config/log.html">Docs</see></para>
 /// </summary>
 public class LogConfig
 {

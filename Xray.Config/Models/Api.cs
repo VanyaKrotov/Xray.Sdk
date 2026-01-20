@@ -4,7 +4,7 @@ namespace Xray.Config.Models;
 
 /// <summary>
 /// API interface configuration provides a set of APIs based on gRPC for remote invocation.
-/// <para><see href="https://xtls.github.io/en/config/api.html">Docs</see></para>
+/// <para><see href="https://xtls.github.io/config/api.html">Docs</see></para>
 /// </summary>
 public class ApiConfig
 {
@@ -16,13 +16,13 @@ public class ApiConfig
 
     /// <summary>
     /// The IP and port that the API service listens on. This is an optional configuration item.
-    /// <para>When you omit this item, you need to add inbounds and routing configurations according to the examples in the <see href="https://xtls.github.io/en/config/api.html#related-configuration">relevant configurations below</see>.</para>
+    /// <para>When you omit this item, you need to add inbounds and routing configurations according to the examples in the <see href="https://xtls.github.io/config/api.html#related-configuration">relevant configurations below</see>.</para>
     /// </summary>
     [JsonPropertyName("listen")]
     public string? Listen { get; set; }
 
     /// <summary>
-    /// List of enabled APIs, optional values can be found in <see href="https://xtls.github.io/en/config/api.html#supported-api-list">Supported API List</see>.
+    /// List of enabled APIs, optional values can be found in <see href="https://xtls.github.io/config/api.html#supported-api-list">Supported API List</see>.
     /// </summary>
     [JsonPropertyName("services")]
     public List<string>? Services { get; set; }
@@ -54,7 +54,7 @@ public static class ApiServices
     public const string Logger = "LoggerService";
 
     /// <summary>
-    /// Built-in data statistics service, see <see href="https://xtls.github.io/en/config/stats.html">Statistics Information</see> for details
+    /// Built-in data statistics service, see <see href="https://xtls.github.io/config/stats.html">Statistics Information</see> for details
     /// </summary>
     public const string Stats = "StatsService";
 
