@@ -4,8 +4,8 @@ using Xray.Config.Utilities;
 
 namespace Xray.Config.Enums;
 
-[JsonConverter(typeof(EnumMemberConverter<RawHeadersType>))]
-public enum RawHeadersType
+[JsonConverter(typeof(EnumMemberConverter<HeadersType>))]
+public enum HeadersType
 {   
     /// <summary>
     /// Specifies that no masking is performed.

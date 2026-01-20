@@ -7,6 +7,7 @@ namespace Xray.Config.Models;
 /// <summary>
 /// Transport is the way the current Xray node interacts with other nodes.
 /// <para>A transport defines how data is transmitted. Typically, both ends of a network connection must use the same transport. For example, if one end uses WebSocket, the other end must also use WebSocket, otherwise the connection will fail.</para>
+/// <para><see href="https://xtls.github.io/config/transport.html">Docs</see></para>
 /// </summary>
 public class TransportConfig : StreamSettings { }
 
@@ -443,6 +444,9 @@ public class TlsCertificate
     public List<string>? Key { get; set; }
 }
 
+/// <summary>
+/// Reality Configuration. Reality is Xray's original technology. Reality provides a higher level of security than TLS and is configured in the same way as TLS.
+/// </summary>
 public class RealitySettings
 {
     /// <summary>
@@ -591,7 +595,7 @@ public class RawSettings
 public abstract class BaseSettingsHeaders
 {
     [JsonPropertyName("type")]
-    public RawHeadersType Type { get; set; } = RawHeadersType.None;
+    public HeadersType Type { get; set; } = HeadersType.None;
 }
 
 /// <summary>
@@ -616,7 +620,6 @@ public class HttpSettingsHeaders : BaseSettingsHeaders
     [JsonPropertyName("response")]
     public HttpRequest? HttpResponse { get; set; }
 }
-
 
 public class HttpRequest
 {
@@ -672,20 +675,38 @@ public class HttpResponse
     public HttpHeaders? Headers { get; set; }
 }
 
+/// <summary>
+/// XHTTP configuration for the current connection, valid only if this connection uses XHTTP.
+/// </summary>
 public class XHttpSettings
 {
+    /// <summary>
+    /// Host header: in the HTTP request.
+    /// </summary>
     [JsonPropertyName("host")]
     public string? Host { get; set; }
 
+    /// <summary>
+    /// The HTTP path that the client uses to send requests.
+    /// </summary>
     [JsonPropertyName("path")]
     public string? Path { get; set; }
 
+    /// <summary>
+    /// Mode for sending data from the client to the server. Use client-only.
+    /// </summary>
     [JsonPropertyName("mode")]
-    public string? Mode { get; set; }
+    public XHttpMode Mode { get; set; } = XHttpMode.Auto;
 
+    /// <summary>
+    /// The sharing scheme for the original JSON for all parameters except host, path, mode. When extra is present, only these four parameters are valid.
+    /// </summary>
     [JsonPropertyName("extra")]
     public XHttpExtraSettings? Extra { get; set; }
 
+    /// <summary>
+    /// Additional HTTP headers.
+    /// </summary>
     [JsonPropertyName("headers")]
     public HttpHeaders? Headers { get; set; }
 }
@@ -753,89 +774,211 @@ public class XHttpDownloadSettings : StreamSettings
     public int? Port { get; set; }
 }
 
+/// <summary>
+/// mKCP configuration for the current connection, valid only if this connection uses mKCP.
+/// </summary>
 public class KcpSettings
 {
+    /// <summary>
+    /// Maximum transmission unit.
+    /// <para>Select a value between 576 and 1460.</para>
+    /// <para>By default 1350.</para>
+    /// </summary>
     [JsonPropertyName("mtu")]
     public int? Mtu { get; set; }
 
+    /// <summary>
+    /// Transmission time interval, in milliseconds (ms), mKCP will send data at this rate.
+    /// <para>Select a value between 10 and 100.</para>
+    /// <para>By default 50.</para>
+    /// </summary>
     [JsonPropertyName("tti")]
     public int? Tti { get; set; }
 
+    /// <summary>
+    /// The sending channel throughput, i.e. the maximum bandwidth used by the host to send data, in MB/s (note these are bytes, not bits).
+    /// <para>Can be set to 0, meaning very little throughput.</para>
+    /// <para>By default 5</para>
+    /// </summary>
     [JsonPropertyName("uplinkCapacity")]
     public int? UplinkCapacity { get; set; }
 
+    /// <summary>
+    /// The receive channel throughput, i.e. the maximum bandwidth used by the host to receive data, in MB/s (note that these are bytes, not bits).
+    /// <para>Can be set to 0, meaning very little throughput.</para>
+    /// <para>By default 20.</para>
+    /// </summary>
     [JsonPropertyName("downlinkCapacity")]
     public int? DownlinkCapacity { get; set; }
 
+    /// <summary>
+    /// Enable or disable overload control.
+    /// <para>By default false.</para>
+    /// </summary>
     [JsonPropertyName("congestion")]
     public bool? Congestion { get; set; }
 
+    /// <summary>
+    /// The read buffer size for a single connection, in MB.
+    /// <para>By default 2.</para>
+    /// </summary>
     [JsonPropertyName("readBufferSize")]
     public int? ReadBufferSize { get; set; }
 
+    /// <summary>
+    /// The write buffer size for a single connection, in MB.
+    /// <para>By default 2.</para>
+    /// </summary>
     [JsonPropertyName("writeBufferSize")]
     public int? WriteBufferSize { get; set; }
 
+    /// <summary>
+    /// Configuring data header masking
+    /// </summary>
     [JsonPropertyName("header")]
-    public HttpSettingsHeaders? Header { get; set; }
+    public KCPHeaders? Header { get; set; }
 
+    /// <summary>
+    /// Optional password encryption used to encrypt the data stream using the AES-128-GCM algorithm. The client and server must use the same password.
+    /// </summary>
     [JsonPropertyName("seed")]
     public string? Seed { get; set; }
 }
 
+public class KCPHeaders
+{
+    /// <summary>
+    /// Camouflage type.
+    /// </summary>
+    [JsonPropertyName("type")]
+    public KcpHeaderType Type { get; set; } = KcpHeaderType.None;
+
+    /// <summary>
+    /// Used in conjunction with the masking type "dns", you can specify an arbitrary domain.
+    /// </summary>
+    [JsonPropertyName("domain")]
+    public string? Domain { get; set; }
+}
+
+/// <summary>
+/// gRPC configuration for the current connection, valid only if this connection uses gRPC.
+/// </summary>
 public class GRPCSettings
 {
+    /// <summary>
+    /// A string that can be used as Host for some other purpose.
+    /// </summary>
     [JsonPropertyName("authority")]
     public string? Authority { get; set; }
 
+    /// <summary>
+    /// A string specifying the service name, similar to a path in HTTP/2. The client will use this name to communicate, and the server will check whether the service name matches.
+    /// </summary>
     [JsonPropertyName("serviceName")]
     public string? ServiceName { get; set; }
 
+    /// <summary>
+    /// [BETA] true includes multiMode, default value: false.
+    /// </summary>
     [JsonPropertyName("multiMode")]
     public bool MultiMode { get; set; }
 
+    /// <summary>
+    /// Setting a gRPC user agent can prevent gRPC traffic from being blocked by some CDNs.
+    /// </summary>
     [JsonPropertyName("user_agent")]
     public string? UserAgent { get; set; }
 
+    /// <summary>
+    /// A health check is performed if no data is transmitted for a specified period of time, measured in seconds. If this value is less than 10, then will be used as the minimum value 10.
+    /// </summary>
     [JsonPropertyName("idle_timeout")]
     public int? IdleTimeout { get; set; }
 
+    /// <summary>
+    /// The health check response timeout in seconds. If the health check is not completed within this time and there is still no data transfer, the health check will be considered a failure. Default value: 20.
+    /// </summary>
     [JsonPropertyName("health_check_timeout")]
     public int? HealthCheckTimeout { get; set; }
 
+    /// <summary>
+    /// true enables health checking if there are no child connections. Default value: false.
+    /// </summary>
     [JsonPropertyName("permit_without_stream")]
     public bool PermitWithoutStream { get; set; }
 
+    /// <summary>
+    /// The initial h2 Stream window size. If the value is less than or equal to 0, this feature has no effect. If the value is greater than 65535, the dynamic window mechanism is disabled. The default value is 0, meaning it has no effect.
+    /// </summary>
     [JsonPropertyName("initial_windows_size")]
     public int? InitialWindowsSize { get; set; }
 }
 
+/// <summary>
+/// WebSocket configuration for the current connection, valid only if this connection uses WebSocket.
+/// </summary>
 public class WSSettings
 {
+    /// <summary>
+    /// For incoming connections only, specifies whether to accept the PROXY protocol.
+    /// <para>If set true, then after establishing a TCP connection at the lowest level, the requesting party must first send PROXY protocol v1 or v2, otherwise the connection will be closed.</para>
+    /// </summary>
     [JsonPropertyName("acceptProxyProtocol")]
     public bool? AcceptProxyProtocol { get; set; }
 
+    /// <summary>
+    /// The path used by WebSocket in the HTTP protocol, the default value is "/".
+    /// </summary>
     [JsonPropertyName("path")]
     public string? Path { get; set; }
 
+    /// <summary>
+    /// The host sent in the WebSocket HTTP request; the default value is empty. If the server-side value is empty, the host value sent by the client is not checked.
+    /// </summary>
     [JsonPropertyName("host")]
     public string? Host { get; set; }
 
+    /// <summary>
+    /// Custom HTTP headers are key-value pairs where each key represents the name of an HTTP header and the corresponding value is a string.
+    /// <para>Default value: empty.</para>
+    /// </summary>
     [JsonPropertyName("headers")]
     public HttpHeaders? Headers { get; set; }
+
+    /// <summary>
+    /// Specifies the time interval for sending Ping messages to maintain a connection. If not specified or set to 0, Ping messages are not sent (the current behavior is the default).
+    /// </summary>
+    [JsonPropertyName("heartbeatPeriod")]
+    public int? HeartbeatPeriod { get; set; }
 }
 
+/// <summary>
+/// HTTPUpgrade configuration for the current connection, valid only if this connection uses HTTPUpgrade.
+/// </summary>
 public class HttpUpgradeSettings
 {
+    /// <summary>
+    /// Used only for incoming connections and specifies whether to accept the PROXY protocol.
+    /// </summary>
     [JsonPropertyName("acceptProxyProtocol")]
     public bool? AcceptProxyProtocol { get; set; }
 
+    /// <summary>
+    /// The HTTP path used by HTTPUpgrade, by default "/".
+    /// </summary>
     [JsonPropertyName("path")]
     public string? Path { get; set; }
 
+    /// <summary>
+    /// The host sent in the HTTPUpgrade HTTP request is empty by default. If the server-side value is empty, the host value sent by the client is not validated.
+    /// </summary>
     [JsonPropertyName("host")]
     public string? Host { get; set; }
 
+    /// <summary>
+    /// Custom HTTP headers, a key-value pair where each key represents the name of an HTTP header and the corresponding value is a string.
+    /// <para>Empty by default.</para>
+    /// </summary>
     [JsonPropertyName("headers")]
     public HttpHeaders? Headers { get; set; }
 }

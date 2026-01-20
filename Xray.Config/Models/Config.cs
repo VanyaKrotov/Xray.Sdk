@@ -46,13 +46,13 @@ public class XrayConfig
     public PolicyConfig? Policy { get; set; }
 
     /// <summary>
-    /// ?
+    /// An array where each element represents an incoming connection configuration.
     /// </summary>
     [JsonPropertyName("inbounds")]
     public List<Inbound> Inbounds { get; set; } = new();
 
     /// <summary>
-    /// ?
+    /// An array where each element represents an outgoing connection configuration.
     /// </summary>
     [JsonPropertyName("outbounds")]
     public List<Outbound> Outbounds { get; set; } = new();

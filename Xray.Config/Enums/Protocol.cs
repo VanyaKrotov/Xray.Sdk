@@ -66,5 +66,8 @@ public enum OutboundProtocol
     Trojan,
 
     [EnumMember(Value = "wireguard")]
-    Wireguard
+    Wireguard,
+    
+    [EnumMember(Value = "hysteria2")]
+    Hysteria2
 }
