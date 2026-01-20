@@ -34,9 +34,21 @@ public enum Fingerprint
     [EnumMember(Value = "qq")]
     Qq,
 
+    /// <summary>
+    /// [DANGER] For security reasons, this parameter should not be use.
+    /// </summary>
+    [EnumMember(Value = "unsafe")]
+    Unsafe,
+
+    /// <summary>
+    /// Random selection of new browser versions.
+    /// </summary>
     [EnumMember(Value = "random")]
     Random,
 
+    /// <summary>
+    /// Full random generation of a unique fingerprint (100% support for TLS 1.3 using X25519)
+    /// </summary>
     [EnumMember(Value = "randomized")]
     Randomized,
 }

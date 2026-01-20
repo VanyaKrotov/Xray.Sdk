@@ -58,7 +58,7 @@ public class XrayConfig
     public List<Outbound> Outbounds { get; set; } = new();
 
     /// <summary>
-    /// ?
+    /// Transport is the way the current Xray node interacts with other nodes.
     /// </summary>
     [JsonPropertyName("transport")]
     public TransportConfig? Transport { get; set; }

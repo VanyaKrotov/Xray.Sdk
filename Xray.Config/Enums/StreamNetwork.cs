@@ -13,9 +13,6 @@ public enum StreamNetwork
     [EnumMember(Value = "xhttp")]
     XHttp,
 
-    // [EnumMember(Value = "tcp")]
-    // Tcp,
-
     [EnumMember(Value = "kcp")]
     Kcp,
 
@@ -26,5 +23,8 @@ public enum StreamNetwork
     Ws,
 
     [EnumMember(Value = "httpupgrade")]
-    HttpUpgrade
+    HttpUpgrade,
+    
+    [EnumMember(Value = "hysteria")]
+    Hysteria
 }
