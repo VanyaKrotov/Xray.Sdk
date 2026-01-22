@@ -328,7 +328,7 @@ public abstract class Outbound
         /// Flow control mode, used to select the XTLS algorithm.
         /// </summary>
         [JsonPropertyName("flow")]
-        public Flow? Flow { get; set; }
+        public XtlsFlow? Flow { get; set; }
 
         /// <summary>
         /// A simplified configuration for the VLESS reverse proxy. It serves the same purpose as the built-in universal reverse proxy, but with a simpler setup.

@@ -4,8 +4,8 @@ using Xray.Config.Utilities;
 
 namespace Xray.Config.Enums;
 
-[JsonConverter(typeof(EnumMemberConverter<Flow>))]
-public enum Flow
+[JsonConverter(typeof(EnumMemberConverter<XtlsFlow>))]
+public enum XtlsFlow
 {   
     /// <summary>
     /// Default empty value

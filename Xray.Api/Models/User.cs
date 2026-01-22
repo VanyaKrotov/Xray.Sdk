@@ -11,10 +11,19 @@ public class BaseUser
 
 public class VlessUser : BaseUser
 {
+    /// <summary>
+    /// The VLESS user identifier can be any string less than 30 bytes long or a valid UUID.
+    /// </summary>
     public required string Id { get; set; }
 
+    /// <summary>
+    /// Flow control mode, used to select the XTLS algorithm.
+    /// </summary>
     public string? Flow { get; set; }
 
+    /// <summary>
+    /// VLESS encryption settings . This cannot be empty; to disable it, you must explicitly set the value "none".
+    /// </summary>
     public string? Encryption { get; set; }
 
     public uint XorMode { get; set; }

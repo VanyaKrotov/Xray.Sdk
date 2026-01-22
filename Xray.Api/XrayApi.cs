@@ -1,12 +1,13 @@
+using System.Text.Json;
 using Google.Protobuf;
 using Grpc.Net.Client;
+using Xray.Api.Mappers;
+using Xray.Api.Models;
 using Xray.App.Log.Command;
 using Xray.App.Proxyman.Command;
 using Xray.App.Stats.Command;
 using Xray.Common.Protocol;
 using Xray.Common.Serial;
-using Xray.Api.Mappers;
-using Xray.Api.Models;
 
 namespace Xray.Api.Service;
 
@@ -79,11 +80,11 @@ public class XrayApi : IXrayApi
     {
         await _handler.AlterInboundAsync(CreateAddUserOperation(values, new TypedMessage()
         {
-            Type = Xray.Proxy.Vless.Account.Descriptor.FullName,
-            Value = new Xray.Proxy.Vless.Account()
+            Type = Proxy.Vless.Account.Descriptor.FullName,
+            Value = new Proxy.Vless.Account()
             {
-                Id = values.Uuid,
-                Flow = values.Flow,
+                Id = values.Id,
+                Flow = JsonSerializer.Serialize(values.Flow),
                 Encryption = "none",
             }.ToByteString()
         }));
@@ -93,8 +94,8 @@ public class XrayApi : IXrayApi
     {
         await _handler.AlterInboundAsync(CreateAddUserOperation(values, new TypedMessage()
         {
-            Type = Xray.Proxy.Trojan.Account.Descriptor.FullName,
-            Value = new Xray.Proxy.Trojan.Account()
+            Type = Proxy.Trojan.Account.Descriptor.FullName,
+            Value = new Proxy.Trojan.Account()
             {
                 Password = values.Password
             }.ToByteString()
@@ -105,11 +106,11 @@ public class XrayApi : IXrayApi
     {
         await _handler.AlterInboundAsync(CreateAddUserOperation(values, new TypedMessage()
         {
-            Type = Xray.Proxy.Shadowsocks.Account.Descriptor.FullName,
-            Value = new Xray.Proxy.Shadowsocks.Account()
+            Type = Proxy.Shadowsocks.Account.Descriptor.FullName,
+            Value = new Proxy.Shadowsocks.Account()
             {
                 Password = values.Password,
-                CipherType = (Xray.Proxy.Shadowsocks.CipherType)values.CipherType,
+                CipherType = (Proxy.Shadowsocks.CipherType)values.CipherType,
                 IvCheck = values.IvCheck
             }.ToByteString()
         }));
@@ -119,8 +120,8 @@ public class XrayApi : IXrayApi
     {
         await _handler.AlterInboundAsync(CreateAddUserOperation(values, new TypedMessage()
         {
-            Type = Xray.Proxy.Shadowsocks2022.Account.Descriptor.FullName,
-            Value = new Xray.Proxy.Shadowsocks2022.Account()
+            Type = Proxy.Shadowsocks2022.Account.Descriptor.FullName,
+            Value = new Proxy.Shadowsocks2022.Account()
             {
                 Key = values.Key
             }.ToByteString()
@@ -131,8 +132,8 @@ public class XrayApi : IXrayApi
     {
         await _handler.AlterInboundAsync(CreateAddUserOperation(values, new TypedMessage()
         {
-            Type = Xray.Proxy.Socks.Account.Descriptor.FullName,
-            Value = new Xray.Proxy.Socks.Account()
+            Type = Proxy.Socks.Account.Descriptor.FullName,
+            Value = new Proxy.Socks.Account()
             {
                 Password = values.Password,
                 Username = values.Username,
@@ -144,8 +145,8 @@ public class XrayApi : IXrayApi
     {
         await _handler.AlterInboundAsync(CreateAddUserOperation(values, new TypedMessage()
         {
-            Type = Xray.Proxy.Http.Account.Descriptor.FullName,
-            Value = new Xray.Proxy.Http.Account()
+            Type = Proxy.Http.Account.Descriptor.FullName,
+            Value = new Proxy.Http.Account()
             {
                 Password = values.Password,
                 Username = values.Username,
@@ -204,5 +205,12 @@ public class XrayApi : IXrayApi
 
             throw;
         }
+    }
+
+    public async Task<ICollection<string>> GetAllOnlineUsers()
+    {
+        var response = await _stats.GetAllOnlineUsersAsync(new GetAllOnlineUsersRequest());
+
+        return response.Users.ToList();
     }
 }

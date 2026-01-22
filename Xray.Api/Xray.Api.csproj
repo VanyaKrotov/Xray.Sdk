@@ -20,4 +20,8 @@
     <Protobuf Include=".\Xray-Protos\**\*.proto" GrpcServices="Client" ProtoRoot=".\Xray-Protos" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Xray.Config\Xray.Config.csproj" />
+  </ItemGroup>
+
 </Project>
