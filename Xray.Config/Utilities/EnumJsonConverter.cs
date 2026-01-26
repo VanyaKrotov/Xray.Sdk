@@ -41,7 +41,7 @@ public class SplitEnumConverter<T> : JsonConverter<List<T>> where T : struct, En
 
     public override void Write(Utf8JsonWriter writer, List<T> value, JsonSerializerOptions options)
     {
-        writer.WriteStringValue(string.Join(",", value.Select(EnumMemberConvert.ToString<T>)));
+        writer.WriteStringValue(string.Join(",", value.Select(EnumMemberConvert.ToString)));
     }
 }
 
