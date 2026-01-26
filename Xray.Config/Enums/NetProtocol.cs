@@ -1,18 +1,15 @@
-using System.Runtime.Serialization;
-using System.Text.Json.Serialization;
 using Xray.Config.Utilities;
 
 namespace Xray.Config.Enums;
 
-[JsonConverter(typeof(EnumMemberConverter<NetProtocol>))]
 public enum NetProtocol
 {
-    [EnumMember(Value = "http")]
+    [EnumProperty("http")]
     Http,
 
-    [EnumMember(Value = "tls")]
+    [EnumProperty("tls")]
     Tls,
 
-    [EnumMember(Value = "bittorrent")]
+    [EnumProperty("bittorrent")]
     Bittorrent
 }

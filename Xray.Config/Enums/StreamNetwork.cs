@@ -1,30 +1,28 @@
-using System.Runtime.Serialization;
-using System.Text.Json.Serialization;
 using Xray.Config.Utilities;
 
 namespace Xray.Config.Enums;
 
-[JsonConverter(typeof(EnumMemberConverter<StreamNetwork>))]
 public enum StreamNetwork
 {
-    [EnumMember(Value = "raw")]
+    [EnumProperty("raw")]
+    [EnumProperty("tcp")]
     Raw,
 
-    [EnumMember(Value = "xhttp")]
+    [EnumProperty("xhttp")]
     XHttp,
 
-    [EnumMember(Value = "kcp")]
+    [EnumProperty("kcp")]
     Kcp,
 
-    [EnumMember(Value = "grpc")]
+    [EnumProperty("grpc")]
     Grpc,
 
-    [EnumMember(Value = "ws")]
+    [EnumProperty("ws")]
     Ws,
 
-    [EnumMember(Value = "httpupgrade")]
+    [EnumProperty("httpupgrade")]
     HttpUpgrade,
-    
-    [EnumMember(Value = "hysteria")]
+
+    [EnumProperty("hysteria")]
     Hysteria
 }

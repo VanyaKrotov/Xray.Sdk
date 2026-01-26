@@ -2,7 +2,7 @@ using Xray.Config.Utilities;
 
 namespace Xray.Config.Enums;
 
-public enum TransportProtocol
+public enum Network
 {
     [EnumProperty("tcp")]
     Tcp,

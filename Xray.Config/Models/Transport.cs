@@ -42,6 +42,13 @@ public class StreamSettings
     [JsonPropertyName("rawSettings")]
     public RawSettings? RawSettings { get; set; }
 
+    [JsonInclude]
+    [JsonPropertyName("tcpSettings")]
+    private RawSettings? TcpSettings
+    {
+        set => RawSettings = value;
+    }
+
     /// <summary>
     /// XHTTP configuration for the current connection, valid only if this connection uses XHTTP.
     /// </summary>

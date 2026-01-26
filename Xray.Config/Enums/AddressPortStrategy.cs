@@ -1,30 +1,27 @@
-using System.Runtime.Serialization;
-using System.Text.Json.Serialization;
 using Xray.Config.Utilities;
 
 namespace Xray.Config.Enums;
 
-[JsonConverter(typeof(EnumMemberConverter<AddressPortStrategy>))]
 public enum AddressPortStrategy
 {
-    [EnumMember(Value = "none")]
+    [EnumProperty("none")]
     None,
 
-    [EnumMember(Value = "SrvPortOnly")]
+    [EnumProperty("SrvPortOnly")]
     SrvPortOnly,
 
-    [EnumMember(Value = "SrvAddressOnly")]
+    [EnumProperty("SrvAddressOnly")]
     SrvAddressOnly,
 
-    [EnumMember(Value = "SrvPortAndAddress")]
+    [EnumProperty("SrvPortAndAddress")]
     SrvPortAndAddress,
 
-    [EnumMember(Value = "TxtPortOnly")]
+    [EnumProperty("TxtPortOnly")]
     TxtPortOnly,
 
-    [EnumMember(Value = "TxtAddressOnly")]
+    [EnumProperty("TxtAddressOnly")]
     TxtAddressOnly,
 
-    [EnumMember(Value = "TxtPortAndAddress")]
+    [EnumProperty("TxtPortAndAddress")]
     TxtPortAndAddress,
 }

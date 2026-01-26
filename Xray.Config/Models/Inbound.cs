@@ -305,7 +305,7 @@ public class InboundConfigConverter : JsonConverter<Inbound>
 
         if (_protocolMap.TryGetValue(protocol, out var targetType))
         {
-            return (Inbound?)doc.Deserialize(targetType, options)!;
+            return (Inbound)doc.Deserialize(targetType, options)!;
         }
 
         throw new JsonException($"Unsupported protocol: {protocol}");

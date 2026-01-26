@@ -1,22 +1,19 @@
 
-using System.Runtime.Serialization;
-using System.Text.Json.Serialization;
 using Xray.Config.Utilities;
 
 namespace Xray.Config.Enums;
 
-[JsonConverter(typeof(EnumMemberConverter<TrafficType>))]
 public enum TrafficType
 {
-    [EnumMember(Value = "http")]
+    [EnumProperty("http")]
     Http,
 
-    [EnumMember(Value = "tls")]
+    [EnumProperty("tls")]
     Tls,
 
-    [EnumMember(Value = "quic")]
+    [EnumProperty("quic")]
     Quic,
 
-    [EnumMember(Value = "fakedns")]
+    [EnumProperty("fakedns")]
     Fakedns
 }

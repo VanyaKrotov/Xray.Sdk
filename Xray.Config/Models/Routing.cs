@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using Xray.Config.Enums;
+using Xray.Config.Utilities;
 
 namespace Xray.Config.Models;
 
@@ -95,14 +96,18 @@ public class RoutingRule
     /// Valid values: "tcp", "udp", or "tcp,udp". The rule takes effect if the connection type matches the specified one.
     /// </summary>
     [JsonPropertyName("network")]
-    public string? Network { get; set; }
+    [JsonConverter(typeof(SplitEnumConverter<Network>))]
+    public List<Network>? Network { get; set; }
 
-    // TODO: add handling alias source
     /// <summary>
     /// An array where each element represents a range of IP addresses. Possible formats include IP address, CIDR, GeoIP, and loading IP addresses from a file. The rule is applied if any element matches the source IP address.
     /// </summary>
     [JsonPropertyName("sourceIP")]
     public List<string>? SourceIP { get; set; }
+
+    [JsonInclude]
+    [JsonPropertyName("source")]
+    private List<string>? Source { set => SourceIP = value; }
 
     /// <summary>
     /// The format is the same as for other IPs. It is used to specify the IP address used by the local host inbound(when listening on all IP addresses, 0.0.0.0 different actual incoming IPs will result in different values localIP).
@@ -165,6 +170,10 @@ public class RoutingRule
     /// </summary>
     [JsonPropertyName("ruleTag")]
     public string? RuleTag { get; set; }
+}
+
+internal class SplitEnumConverterAttribute : Attribute
+{
 }
 
 public class RoutingBalancer

@@ -22,12 +22,12 @@ var config = new XrayConfig()
     {
         new HttpInbound()
         {
-            Port = 8081,
+            Port = new Port(8081),
             Tag = "Tag",
         },
         new DokodemoDoorInbound()
         {
-            Port = 100,
+            Port = new Port(10000),
             Tag = "Decodemo",
             Settings = new Inbound.DokodemoDoorSettings()
             {
@@ -69,13 +69,107 @@ var libCore = new XrayLibCore(new XrayLibOptions()
     LibPath = "native/windows_amd64.dll"
 });
 
+var json = @"
+{
+  ""log"": {
+    ""access"": ""access.log"",
+    ""error"": ""error.log"",
+    ""loglevel"": ""debug""
+  },
+
+  ""dns"": {
+    ""servers"": [
+      ""8.8.8.8"",
+      ""1.1.1.1"",
+      {
+        ""address"": ""localhost"",
+        ""port"": 53
+      }
+    ]
+  },
+
+  ""inbounds"": [
+    {
+      ""tag"": ""vmess-in"",
+      ""port"": 1080,
+      ""protocol"": ""vmess"",
+      ""settings"": {
+        ""clients"": [
+          {
+            ""id"": ""11111111-1111-1111-1111-111111111111"",
+            ""alterId"": 0
+          }
+        ]
+      },
+      ""streamSettings"": {
+        ""network"": ""tcp""
+      }
+    },
+    {
+      ""tag"": ""socks-in"",
+      ""port"": 1081,
+      ""protocol"": ""socks"",
+      ""settings"": {
+        ""auth"": ""noauth"",
+        ""udp"": true
+      }
+    },
+    {
+      ""tag"": ""http-in"",
+      ""port"": 1082,
+      ""protocol"": ""http"",
+      ""settings"": {}
+    }
+  ],
+
+  ""outbounds"": [
+    {
+      ""tag"": ""direct"",
+      ""protocol"": ""freedom"",
+      ""settings"": {}
+    },
+    {
+      ""tag"": ""block"",
+      ""protocol"": ""blackhole"",
+      ""settings"": {}
+    }
+  ],
+
+  ""routing"": {
+    ""domainStrategy"": ""AsIs"",
+    ""rules"": [
+      {
+        ""type"": ""field"",
+        ""domain"": [""geosite:category-ads""],
+        ""outboundTag"": ""block""
+      },
+      {
+        ""type"": ""field"",
+        ""ip"": [""geoip:private""],
+        ""outboundTag"": ""direct""
+      },
+      {
+        ""type"": ""field"",
+        ""inboundTag"": [""vmess-in"", ""socks-in"", ""http-in""],
+        ""outboundTag"": ""direct""
+      }
+    ]
+  }
+}
+";
+
+
+var res = XrayConfig.FromJson(json);
+
 // var processVersion = processCore.Version();
 
 // processCore.Start(config);
 // processCore.Stop();
 
 var version = libCore.Version();
+var nextJson = res.ToJson();
 
+Console.WriteLine(nextJson);
 Console.WriteLine($"Version: {version}");
 
 libCore.Start(config);

@@ -1,54 +1,51 @@
-using System.Runtime.Serialization;
-using System.Text.Json.Serialization;
 using Xray.Config.Utilities;
 
 namespace Xray.Config.Enums;
 
-[JsonConverter(typeof(EnumMemberConverter<Fingerprint>))]
 public enum Fingerprint
 {
-    [EnumMember(Value = "")]
+    [EnumProperty("")]
     None,
 
-    [EnumMember(Value = "chrome")]
+    [EnumProperty("chrome")]
     Chrome,
 
-    [EnumMember(Value = "firefox")]
+    [EnumProperty("firefox")]
     Firefox,
 
-    [EnumMember(Value = "safari")]
+    [EnumProperty("safari")]
     Safari,
 
-    [EnumMember(Value = "ios")]
+    [EnumProperty("ios")]
     iOS,
 
-    [EnumMember(Value = "android")]
+    [EnumProperty("android")]
     Android,
 
-    [EnumMember(Value = "edge")]
+    [EnumProperty("edge")]
     Edge,
 
-    [EnumMember(Value = "360")]
+    [EnumProperty("360")]
     e360,
 
-    [EnumMember(Value = "qq")]
+    [EnumProperty("qq")]
     Qq,
 
     /// <summary>
     /// [DANGER] For security reasons, this parameter should not be use.
     /// </summary>
-    [EnumMember(Value = "unsafe")]
+    [EnumProperty("unsafe")]
     Unsafe,
 
     /// <summary>
     /// Random selection of new browser versions.
     /// </summary>
-    [EnumMember(Value = "random")]
+    [EnumProperty("random")]
     Random,
 
     /// <summary>
     /// Full random generation of a unique fingerprint (100% support for TLS 1.3 using X25519)
     /// </summary>
-    [EnumMember(Value = "randomized")]
+    [EnumProperty("randomized")]
     Randomized,
 }

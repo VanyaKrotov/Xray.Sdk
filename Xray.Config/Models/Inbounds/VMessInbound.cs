@@ -15,7 +15,7 @@ public class VMessInbound : Inbound
 }
 
 public class VMessClient : WithLevel
-{   
+{
     /// <summary>
     /// The VMess user ID. This can be any string less than 30 bytes long or a valid UUID.
     /// </summary>
@@ -26,7 +26,7 @@ public class VMessClient : WithLevel
     /// The user's email address, used to separate traffic from different users.
     /// </summary>
     [JsonPropertyName("email")]
-    public required string Email { get; set; }
+    public string Email { get; set; } = string.Empty;
 
 }
 

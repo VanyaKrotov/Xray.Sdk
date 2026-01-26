@@ -119,7 +119,7 @@ public abstract class CommonRules
     /// The optimistic cache lifetime in seconds. The default value is 0 (never expires).
     /// </summary>
     [JsonPropertyName("serveExpiredTTL")]
-    public long ServeExpiredTTL { get; set; }
+    public long? ServeExpiredTTL { get; set; }
 
     /// <summary>
     /// Used to notify the server of the specified IP location during DNS queries. Cannot be a private address.

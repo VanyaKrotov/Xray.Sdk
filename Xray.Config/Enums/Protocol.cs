@@ -1,73 +1,69 @@
-using System.Runtime.Serialization;
-using System.Text.Json.Serialization;
 using Xray.Config.Utilities;
 
 namespace Xray.Config.Enums;
 
-[JsonConverter(typeof(EnumMemberConverter<InboundProtocol>))]
 public enum InboundProtocol
 {
-    [EnumMember(Value = "dokodemo-door")]
+    [EnumProperty("dokodemo-door")]
     DokodemoDoor,
 
-    [EnumMember(Value = "http")]
+    [EnumProperty("http")]
     Http,
 
-    [EnumMember(Value = "shadowsocks")]
+    [EnumProperty("shadowsocks")]
     ShadowSocks,
 
-    [EnumMember(Value = "socks")]
+    [EnumProperty("socks")]
     Socks,
 
-    [EnumMember(Value = "vless")]
+    [EnumProperty("vless")]
     Vless,
 
-    [EnumMember(Value = "vmess")]
+    [EnumProperty("vmess")]
     VMess,
 
-    [EnumMember(Value = "trojan")]
+    [EnumProperty("trojan")]
     Trojan,
 
-    [EnumMember(Value = "wireguard")]
+    [EnumProperty("wireguard")]
     Wireguard
 }
 
-[JsonConverter(typeof(EnumMemberConverter<OutboundProtocol>))]
 public enum OutboundProtocol
 {
-    [EnumMember(Value = "blackhole")]
+    [EnumProperty("blackhole")]
     BlackHole,
 
-    [EnumMember(Value = "dns")]
+    [EnumProperty("dns")]
     Dns,
 
-    [EnumMember(Value = "freedom")]
+    [EnumProperty("freedom")]
     Freedom,
 
-    [EnumMember(Value = "loopback")]
+    [EnumProperty("loopback")]
     Loopback,
 
-    [EnumMember(Value = "http")]
+    [EnumProperty("http")]
     Http,
 
-    [EnumMember(Value = "shadowsocks")]
+    [EnumProperty("shadowsocks")]
     ShadowSocks,
 
-    [EnumMember(Value = "socks")]
+    [EnumProperty("socks")]
     Socks,
 
-    [EnumMember(Value = "vless")]
+    [EnumProperty("vless")]
     Vless,
 
-    [EnumMember(Value = "vmess")]
+    [EnumProperty("vmess")]
     VMess,
 
-    [EnumMember(Value = "trojan")]
+    [EnumProperty("trojan")]
     Trojan,
 
-    [EnumMember(Value = "wireguard")]
+    [EnumProperty("wireguard")]
     Wireguard,
-    
-    [EnumMember(Value = "hysteria")]
+
+    [EnumProperty("hysteria")]
     Hysteria
 }
