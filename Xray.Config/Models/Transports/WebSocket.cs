@@ -1,4 +1,4 @@
-using System.Net.Http.Headers;
+using System.Collections.Specialized;
 using System.Text.Json.Serialization;
 
 namespace Xray.Config.Models;
@@ -32,7 +32,7 @@ public class WSSettings
     /// <para>Default value: empty.</para>
     /// </summary>
     [JsonPropertyName("headers")]
-    public HttpHeaders? Headers { get; set; }
+    public NameValueCollection Headers { get; set; } = new();
 
     /// <summary>
     /// Specifies the time interval for sending Ping messages to maintain a connection. If not specified or set to 0, Ping messages are not sent (the current behavior is the default).

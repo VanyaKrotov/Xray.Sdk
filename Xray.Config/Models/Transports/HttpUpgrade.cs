@@ -1,4 +1,4 @@
-using System.Net.Http.Headers;
+using System.Collections.Specialized;
 using System.Text.Json.Serialization;
 
 namespace Xray.Config.Models;
@@ -31,5 +31,5 @@ public class HttpUpgradeSettings
     /// <para>Empty by default.</para>
     /// </summary>
     [JsonPropertyName("headers")]
-    public HttpHeaders? Headers { get; set; }
+    public NameValueCollection Headers { get; set; } = new();
 }

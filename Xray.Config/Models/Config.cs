@@ -128,19 +128,16 @@ public class XrayConfig
     /// <returns>Xray configuration object</returns>
     public static XrayConfig FromJson(string json) => JsonSerializer.Deserialize<XrayConfig>(json, _options)!;
 
-    //
-    private static JsonSerializerOptions _options
+
+    private static JsonSerializerOptions _options;
+
+    static XrayConfig()
     {
-        get
+        _options = new JsonSerializerOptions()
         {
-            var options = new JsonSerializerOptions()
-            {
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-            };
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        };
 
-            options.Converters.Add(new UniversalEnumConverterFactory());
-
-            return options;
-        }
+        _options.Converters.Add(new UniversalEnumConverterFactory());
     }
 }

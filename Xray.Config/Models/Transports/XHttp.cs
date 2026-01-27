@@ -1,4 +1,4 @@
-using System.Net.Http.Headers;
+using System.Collections.Specialized;
 using System.Text.Json.Serialization;
 using Xray.Config.Enums;
 
@@ -37,7 +37,7 @@ public class XHttpSettings
     /// Additional HTTP headers.
     /// </summary>
     [JsonPropertyName("headers")]
-    public HttpHeaders? Headers { get; set; }
+    public NameValueCollection Headers { get; set; } = new();
 }
 
 public class XHttpExtraSettings

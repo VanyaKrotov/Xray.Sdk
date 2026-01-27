@@ -11,7 +11,7 @@ public abstract class ShareFormatter
         Name = name;
     }
 
-    public string GetRemark(Inbound inbound)
+    protected string GetRemark(Inbound inbound)
     {
         if (!string.IsNullOrEmpty(inbound.Tag))
         {
@@ -57,7 +57,9 @@ public abstract class ShareFormatter
         throw new ArgumentException($"Unsupport link: {inbound.Protocol}");
     }
 
-    public abstract string FromInbound(VlessInbound inbound);
+    public abstract string FromInbound(VlessInbound inbound, string email);
+    public abstract string FromInbound(VlessInbound inbound, VlessClient client);
+
     public abstract string FromInbound(VMessInbound inbound);
     public abstract string FromInbound(ShadowSocksInbound inbound);
     public abstract string FromInbound(SocksInbound inbound);

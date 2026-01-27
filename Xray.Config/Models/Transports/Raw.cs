@@ -1,4 +1,4 @@
-using System.Net.Http.Headers;
+using System.Collections.Specialized;
 using System.Text.Json.Serialization;
 using Xray.Config.Enums;
 
@@ -42,13 +42,13 @@ public class HttpSettingsHeaders : BaseSettingsHeaders
     /// HTTP request.
     /// </summary>
     [JsonPropertyName("request")]
-    public HttpRequest? Request { get; set; }
+    public HttpRequest Request { get; set; } = new();
 
     /// <summary>
     /// HTTP response.
     /// </summary>
     [JsonPropertyName("response")]
-    public HttpRequest? HttpResponse { get; set; }
+    public HttpRequest HttpResponse { get; set; } = new();
 }
 
 /// <summary>
@@ -72,13 +72,13 @@ public class HttpRequest
     /// Path, array of strings. The default value is ["/"]. If there are multiple values, one is randomly selected for each request.
     /// </summary>
     [JsonPropertyName("path")]
-    public List<string>? Path { get; set; }
+    public List<string> Path { get; set; } = new();
 
     /// <summary>
     /// HTTP headers, key-value pairs, where each key represents the name of an HTTP header and the corresponding value is an array.
     /// </summary>
     [JsonPropertyName("headers")]
-    public HttpHeaders? Headers { get; set; }
+    public NameValueCollection Headers { get; set; } = new();
 }
 
 /// <summary>
@@ -108,5 +108,5 @@ public class HttpResponse
     /// HTTP headers, key-value pairs, where each key represents the name of an HTTP header and the corresponding value is an array.
     /// </summary>
     [JsonPropertyName("headers")]
-    public HttpHeaders? Headers { get; set; }
+    public NameValueCollection Headers { get; set; } = new();
 }

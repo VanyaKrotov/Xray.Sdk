@@ -17,7 +17,7 @@ public class GRPCSettings
     /// A string specifying the service name, similar to a path in HTTP/2. The client will use this name to communicate, and the server will check whether the service name matches.
     /// </summary>
     [JsonPropertyName("serviceName")]
-    public string? ServiceName { get; set; }
+    public string ServiceName { get; set; } = string.Empty;
 
     /// <summary>
     /// [BETA] true includes multiMode, default value: false.

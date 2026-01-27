@@ -22,7 +22,7 @@ public class StreamSettings
     /// Whether transport layer encryption is enabled.
     /// </summary>
     [JsonPropertyName("security")]
-    public StreamSecurity? Security { get; set; }
+    public StreamSecurity Security { get; set; } = StreamSecurity.None;
 
     /// <summary>
     /// TLS configuration. TLS is provided by Golang, and TLS negotiation typically results in TLS 1.3; DTLS is not supported.

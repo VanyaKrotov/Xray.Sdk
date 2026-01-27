@@ -1,18 +1,17 @@
 using System.Reflection;
-using System.Runtime.Serialization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Xray.Config.Utilities;
 
-static class EnumMemberConvert
+static class EnumPropertyConverter
 {
     public static string ToString<T>(T value) where T : struct, Enum
     {
         var field = typeof(T).GetField(value.ToString());
-        var attr = field?.GetCustomAttribute<EnumMemberAttribute>();
+        var attr = field?.GetCustomAttributes(typeof(EnumProperty), false).Cast<EnumProperty>()?.FirstOrDefault();
 
-        return attr?.Value ?? value.ToString();
+        return attr?.Alias ?? value.ToString();
     }
 
     public static T FromString<T>(string value) where T : struct, Enum
@@ -36,12 +35,12 @@ public class SplitEnumConverter<T> : JsonConverter<List<T>> where T : struct, En
 {
     public override List<T> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        return reader.GetString()!.Split(",").Select(EnumMemberConvert.FromString<T>).ToList();
+        return reader.GetString()!.Split(",").Select(EnumPropertyConverter.FromString<T>).ToList();
     }
 
     public override void Write(Utf8JsonWriter writer, List<T> value, JsonSerializerOptions options)
     {
-        writer.WriteStringValue(string.Join(",", value.Select(EnumMemberConvert.ToString)));
+        writer.WriteStringValue(string.Join(",", value.Select(EnumPropertyConverter.ToString)));
     }
 }
 
