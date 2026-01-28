@@ -15,148 +15,38 @@ public class V2RayShareFormatter : ShareFormatter
     public V2RayShareFormatter() : base("v2ray") { }
 
     #region Vless
+    
     public override string FromInbound(VlessInbound inbound, VlessClient client)
     {
-        var settings = inbound.Settings;
         var stream = inbound.StreamSettings;
+        var streamOptions = GetStreamOptions(stream);
+        var security = stream.Security;
         var options = new VlessOptions()
         {
-            Encryption = EnumPropertyConverter.ToString(settings.Decryption),
-            Type = EnumPropertyConverter.ToString(stream.Network),
-            Security = EnumPropertyConverter.ToString(stream.Security)
+            Type = streamOptions.Type,
+            Path = streamOptions.Path,
+            Host = streamOptions.Host,
+            Mode = streamOptions.Mode,
+            Seed = streamOptions.Seed,
+            Authority = streamOptions.Authority,
+            ServiceName = streamOptions.ServiceName,
+            HeaderType = streamOptions.HeaderType,
+            Security = EnumPropertyConverter.ToString(security),
+            Encryption = EnumPropertyConverter.ToString(inbound.Settings.Decryption),
         };
 
-        switch (stream.Network)
+        if (security == StreamSecurity.Tls && stream.TlsSettings != null)
         {
-            case StreamNetwork.Raw:
-                {
-                    var raw = stream.RawSettings ?? new();
-                    var header = raw.Header;
-                    if (header != null && header is HttpSettingsHeaders)
-                    {
-                        var typedHeader = (HttpSettingsHeaders)header;
-
-                        options.Path = typedHeader.Request.Path.FirstOrDefault();
-                        options.Host = SearchHost(typedHeader.Request.Headers);
-                        options.HeaderType = "http";
-                    }
-                }
-                break;
-
-            case StreamNetwork.Kcp:
-                {
-                    var kcp = stream.KcpSettings ?? new();
-                    var header = kcp.Header ?? new();
-
-                    options.HeaderType = EnumPropertyConverter.ToString(header.Type);
-                    options.Seed = kcp.Seed;
-                }
-                break;
-
-            case StreamNetwork.Ws:
-                {
-                    var ws = stream.WSSettings ?? new();
-
-                    options.Path = ws.Path;
-                    options.Host = ws.Host == null ? SearchHost(ws.Headers) : ws.Host;
-                }
-                break;
-
-            case StreamNetwork.Grpc:
-                {
-                    var grpc = stream.GRPCSettings ?? new();
-
-                    options.ServiceName = grpc.ServiceName;
-                    options.Authority = grpc.Authority;
-
-                    if (grpc.MultiMode)
-                    {
-                        options.Mode = "multi";
-                    }
-                }
-                break;
-
-            case StreamNetwork.HttpUpgrade:
-                {
-                    var httpUpgrade = stream.HttpUpgradeSettings ?? new();
-
-                    options.Path = httpUpgrade.Path;
-                    options.Host = httpUpgrade.Host == null ? SearchHost(httpUpgrade.Headers) : httpUpgrade.Host;
-                }
-                break;
-
-            case StreamNetwork.XHttp:
-                {
-                    var xhttp = stream.XHttpSettings ?? new();
-
-                    options.Path = xhttp.Path;
-                    options.Host = xhttp.Host == null ? SearchHost(xhttp.Headers) : xhttp.Host;
-                    options.Mode = EnumPropertyConverter.ToString(xhttp.Mode);
-                }
-                break;
+            GetTlsOptions(stream.TlsSettings, options);
+        }
+        else if (security == StreamSecurity.Reality && stream.RealitySettings != null)
+        {
+            GetRealityOptions(stream.RealitySettings, options);
         }
 
-        switch (stream.Security)
+        if (stream.Network == StreamNetwork.Raw)
         {
-            case StreamSecurity.Tls:
-                {
-                    var tlsSettings = stream.TlsSettings ?? new();
-                    var alpns = tlsSettings.Alpn ?? new();
-                    if (alpns.Count > 0)
-                    {
-                        options.Alpn = string.Join(",", alpns);
-                    }
-
-                    if (tlsSettings.ServerName != null)
-                    {
-                        options.ServiceName = tlsSettings.ServerName;
-                    }
-
-                    if (tlsSettings.Fingerprint != null)
-                    {
-                        options.Fingerprint = EnumPropertyConverter.ToString((Fingerprint)tlsSettings.Fingerprint);
-                    }
-
-                    if (tlsSettings.AllowInsecure)
-                    {
-                        options.AllowInsecure = "1";
-                    }
-                }
-                break;
-
-            case StreamSecurity.Reality:
-                {
-                    var reality = stream.RealitySettings ?? new();
-                    if (reality.ServerNames.Count > 0)
-                    {
-                        options.ServerName = reality.ServerNames.ElementAt(RandomUtilities.GetInRange(0, reality.ServerNames.Count));
-                    }
-
-                    if (reality.Password != null)
-                    {
-                        options.PublicKey = reality.Password;
-                    }
-
-                    if (reality.ShortIds != null && reality.ShortIds.Count > 0)
-                    {
-                        options.ShortId = reality.ShortIds.ElementAt(RandomUtilities.GetInRange(0, reality.ShortIds.Count));
-                    }
-
-                    if (!string.IsNullOrEmpty(reality.Mldsa65Verify))
-                    {
-                        options.Mldsa65Verify = reality.Mldsa65Verify;
-                    }
-
-                    options.Fingerprint = EnumPropertyConverter.ToString(reality.Fingerprint);
-                    options.SpiderX = $"/{RandomUtilities.Seq(15)}";
-
-                    if (stream.Network == StreamNetwork.Raw)
-                    {
-                        options.Flow = EnumPropertyConverter.ToString(client.Flow);
-                    }
-                }
-
-                break;
+            options.Flow = EnumPropertyConverter.ToString(client.Flow);
         }
 
         var builder = new UriBuilder()
@@ -188,18 +78,19 @@ public class V2RayShareFormatter : ShareFormatter
     #endregion
 
     #region VMess
+
     public override string FromInbound(VMessInbound inbound, VMessClient client)
     {
         var stream = inbound.StreamSettings;
         var options = new VMessParams()
         {
-            Address = GetAddressOrDefault(inbound.Listen),
-            Port = (int)inbound.Port.Single!,
             Type = "none",
             Version = "2",
             Id = client.Id,
-            Network = EnumPropertyConverter.ToString(stream.Network),
             Remark = GetRemark(inbound),
+            Port = (int)inbound.Port.Single!,
+            Address = GetAddressOrDefault(inbound.Listen),
+            Network = EnumPropertyConverter.ToString(stream.Network),
             Tls = EnumPropertyConverter.ToString(stream.Security)
         };
 
@@ -277,9 +168,9 @@ public class V2RayShareFormatter : ShareFormatter
                 break;
         }
 
-        if (stream.Security == StreamSecurity.Tls)
+        if (stream.Security == StreamSecurity.Tls && stream.TlsSettings != null)
         {
-            var tls = stream.TlsSettings ?? new();
+            var tls = stream.TlsSettings;
             if (tls.Alpn != null && tls.Alpn.Count > 0)
             {
                 options.Alpn = string.Join(",", tls.Alpn);
@@ -301,13 +192,7 @@ public class V2RayShareFormatter : ShareFormatter
             }
         }
 
-
-        var jsonOptions = JsonSerializer.Serialize(options, new JsonSerializerOptions()
-        {
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        });
-
-        return $"vmess://{Convert.ToBase64String(Encoding.UTF8.GetBytes(jsonOptions))}";
+        return $"vmess://{Convert.ToBase64String(Encoding.UTF8.GetBytes(options.ToJson()))}";
     }
 
     public override string FromInbound(VMessInbound inbound, string email)
@@ -323,28 +208,156 @@ public class V2RayShareFormatter : ShareFormatter
 
     #endregion
 
-    public override string FromInbound(ShadowSocksInbound inbound)
+    #region ShadowSocks
+
+    public override string FromInbound(ShadowSocksInbound inbound, ShadowSocksClient client)
     {
-        throw new NotImplementedException();
+        var stream = inbound.StreamSettings;
+        var streamOptions = GetStreamOptions(stream);
+        var options = new ShadowSocksOptions()
+        {
+            Type = streamOptions.Type,
+            Path = streamOptions.Path,
+            Host = streamOptions.Host,
+            Mode = streamOptions.Mode,
+            Seed = streamOptions.Seed,
+            Authority = streamOptions.Authority,
+            ServiceName = streamOptions.ServiceName,
+            HeaderType = streamOptions.HeaderType,
+        };
+
+        if (stream.Security == StreamSecurity.Tls && stream.TlsSettings != null)
+        {
+            GetTlsOptions(stream.TlsSettings, options);
+        }
+
+        var methodString = inbound.Settings?.Method != null ? EnumPropertyConverter.ToString((EncryptionMethod)inbound.Settings.Method) : "";
+        var part = $"{methodString}:{client.Password}";
+        if (methodString.StartsWith("2022"))
+        {
+            part = $"{methodString}:{inbound.Settings?.Password ?? ""}:{client.Password}";
+        }
+
+        var uriBuilder = new UriBuilder()
+        {
+            Scheme = "ss",
+            Path = "",
+            UserName = Convert.ToBase64String(Encoding.UTF8.GetBytes(part)),
+            Password = "",
+            Port = (int)inbound.Port.Single!,
+            Host = GetAddressOrDefault(inbound.Listen),
+            Query = options.ToQuery(),
+            Fragment = GetRemark(inbound)
+        };
+
+        return uriBuilder.Uri.ToString();
     }
 
-    public override string FromInbound(SocksInbound inbound)
+    public override string FromInbound(ShadowSocksInbound inbound, string email)
     {
-        throw new NotImplementedException();
+        var client = inbound.Settings?.Clients.FirstOrDefault(x => x.Email == email);
+        if (client == null)
+        {
+            throw new ArgumentException($"Client for Email = {email} not found in inbound {inbound.Tag}");
+        }
+
+        return FromInbound(inbound, client);
     }
 
-    public override string FromInbound(TrojanInbound inbound)
+    #endregion
+
+    #region  Trojan
+
+    public override string FromInbound(TrojanInbound inbound, TrojanClient client)
     {
-        throw new NotImplementedException();
+        var stream = inbound.StreamSettings;
+        var streamOptions = GetStreamOptions(stream);
+        var security = stream.Security;
+        var options = new TrojanOptions()
+        {
+            Type = streamOptions.Type,
+            Path = streamOptions.Path,
+            Host = streamOptions.Host,
+            Mode = streamOptions.Mode,
+            Seed = streamOptions.Seed,
+            Authority = streamOptions.Authority,
+            ServiceName = streamOptions.ServiceName,
+            HeaderType = streamOptions.HeaderType,
+            Security = EnumPropertyConverter.ToString(security),
+        };
+
+        if (security == StreamSecurity.Tls && stream.TlsSettings != null)
+        {
+            GetTlsOptions(stream.TlsSettings, options);
+        }
+        else if (security == StreamSecurity.Reality && stream.RealitySettings != null)
+        {
+            GetRealityOptions(stream.RealitySettings, options);
+        }
+
+        var builder = new UriBuilder()
+        {
+            Path = "",
+            Password = "",
+            Scheme = "trojan",
+            UserName = client.Password,
+            Fragment = GetRemark(inbound),
+            Port = (int)inbound.Port.Single!,
+            Host = GetAddressOrDefault(inbound.Listen),
+            Query = options.ToQuery(),
+        };
+
+        return builder.Uri.ToString();
     }
 
+    public override string FromInbound(TrojanInbound inbound, string email)
+    {
+        var client = inbound.Settings?.Clients.FirstOrDefault(x => x.Email == email);
+        if (client == null)
+        {
+            throw new ArgumentException($"Client for Email = {email} not found in inbound {inbound.Tag}");
+        }
 
+        return FromInbound(inbound, client);
+    }
+
+    #endregion
+
+    #region Socks
+
+    public override string FromInbound(SocksInbound inbound, SocksAccount account)
+    {
+        var uriBuilder = new UriBuilder()
+        {
+            Path = "",
+            Scheme = "socks",
+            UserName = account.User,
+            Password = account.Password,
+            Fragment = GetRemark(inbound),
+            Port = (int)inbound.Port.Single!,
+            Host = GetAddressOrDefault(inbound.Listen),
+        };
+
+        return uriBuilder.Uri.ToString();
+    }
+
+    public override string FromInbound(SocksInbound inbound, string username)
+    {
+        var client = inbound.Settings?.Accounts.FirstOrDefault(x => x.User == username);
+        if (client == null)
+        {
+            throw new ArgumentException($"Client for Username = {username} not found in inbound {inbound.Tag}");
+        }
+
+        return FromInbound(inbound, client);
+    }
+
+    #endregion
 
     public override HysteriaOutbound ToHysteriaOutbound(string config)
     {
         throw new NotImplementedException();
     }
-
 
     public override Outbound ToOutbound(string config)
     {
@@ -379,6 +392,137 @@ public class V2RayShareFormatter : ShareFormatter
 
     // private utilities
 
+    private void GetTlsOptions(TlsSettings tlsSettings, TransferOptions options)
+    {
+        var alpns = tlsSettings.Alpn ?? new();
+        if (alpns.Count > 0)
+        {
+            options.Alpn = string.Join(",", alpns);
+        }
+
+        if (tlsSettings.ServerName != null)
+        {
+            options.ServerName = tlsSettings.ServerName;
+        }
+
+        if (tlsSettings.Fingerprint != null)
+        {
+            options.Fingerprint = EnumPropertyConverter.ToString((Fingerprint)tlsSettings.Fingerprint);
+        }
+
+        if (tlsSettings.AllowInsecure)
+        {
+            options.AllowInsecure = "1";
+        }
+    }
+
+    private void GetRealityOptions(RealitySettings reality, RealityTransferOptions options)
+    {
+        if (reality.ServerNames.Count > 0)
+        {
+            options.ServerName = reality.ServerNames.ElementAt(RandomUtilities.GetInRange(0, reality.ServerNames.Count));
+        }
+
+        if (reality.Password != null)
+        {
+            options.PublicKey = reality.Password;
+        }
+
+        if (reality.ShortIds != null && reality.ShortIds.Count > 0)
+        {
+            options.ShortId = reality.ShortIds.ElementAt(RandomUtilities.GetInRange(0, reality.ShortIds.Count));
+        }
+
+        if (!string.IsNullOrEmpty(reality.Mldsa65Verify))
+        {
+            options.Mldsa65Verify = reality.Mldsa65Verify;
+        }
+
+        options.Fingerprint = EnumPropertyConverter.ToString(reality.Fingerprint);
+        options.SpiderX = $"/{RandomUtilities.Seq(15)}";
+    }
+
+    private StreamOptions GetStreamOptions(StreamSettings stream)
+    {
+        var options = new StreamOptions()
+        {
+            Type = EnumPropertyConverter.ToString(stream.Network),
+        };
+
+        switch (stream.Network)
+        {
+            case StreamNetwork.Raw:
+                {
+                    var raw = stream.RawSettings ?? new();
+                    var header = raw.Header;
+                    if (header != null && header is HttpSettingsHeaders)
+                    {
+                        var typedHeader = (HttpSettingsHeaders)header;
+
+                        options.Path = typedHeader.Request.Path.FirstOrDefault();
+                        options.Host = SearchHost(typedHeader.Request.Headers);
+                        options.HeaderType = "http";
+                    }
+                }
+                break;
+
+            case StreamNetwork.Kcp:
+                {
+                    var kcp = stream.KcpSettings ?? new();
+                    var header = kcp.Header ?? new();
+
+                    options.HeaderType = EnumPropertyConverter.ToString(header.Type);
+                    options.Seed = kcp.Seed;
+                }
+                break;
+
+            case StreamNetwork.Ws:
+                {
+                    var ws = stream.WSSettings ?? new();
+
+                    options.Path = ws.Path;
+                    options.Host = ws.Host == null ? SearchHost(ws.Headers) : ws.Host;
+                }
+                break;
+
+            case StreamNetwork.Grpc:
+                {
+                    var grpc = stream.GRPCSettings ?? new();
+
+                    options.ServiceName = grpc.ServiceName;
+                    options.Authority = grpc.Authority;
+
+                    if (grpc.MultiMode)
+                    {
+                        options.Mode = "multi";
+                    }
+                }
+                break;
+
+            case StreamNetwork.HttpUpgrade:
+                {
+                    var httpUpgrade = stream.HttpUpgradeSettings ?? new();
+
+                    options.Path = httpUpgrade.Path;
+                    options.Host = httpUpgrade.Host == null ? SearchHost(httpUpgrade.Headers) : httpUpgrade.Host;
+                }
+                break;
+
+            case StreamNetwork.XHttp:
+                {
+                    var xhttp = stream.XHttpSettings ?? new();
+
+                    options.Path = xhttp.Path;
+                    options.Host = xhttp.Host == null ? SearchHost(xhttp.Headers) : xhttp.Host;
+                    options.Mode = EnumPropertyConverter.ToString(xhttp.Mode);
+                }
+                break;
+        }
+
+
+        return options;
+    }
+
     private string SearchHost(NameValueCollection headers)
     {
         var values = headers.GetValues("host");
@@ -389,34 +533,16 @@ public class V2RayShareFormatter : ShareFormatter
     private string GetAddressOrDefault(string? listen) => string.IsNullOrEmpty(listen) ? DEFAULT_ADDRESS : listen;
 }
 
-class QueryBuilder
+class StreamOptions
 {
-    private Dictionary<string, string> _data = new(StringComparer.OrdinalIgnoreCase);
-
-    public QueryBuilder() { }
-
-    public QueryBuilder(Dictionary<string, string> initial)
-    {
-        foreach (var entity in initial)
-        {
-            _data.Add(entity.Key, entity.Value);
-        }
-    }
-
-    public void Add(string key, string value)
-    {
-        _data.Add(key, value);
-    }
-
-    public void Remove(string key)
-    {
-        _data.Remove(key);
-    }
-
-    public override string ToString()
-    {
-        return string.Join("&", _data.Select(x => $"{x.Key}={x.Value}"));
-    }
+    public string? Path { get; set; }
+    public string? Host { get; set; }
+    public string? HeaderType { get; set; }
+    public string? Seed { get; set; }
+    public string? ServiceName { get; set; }
+    public string? Authority { get; set; }
+    public string? Mode { get; set; }
+    public string? Type { get; set; }
 }
 
 class VMessParams
@@ -474,9 +600,35 @@ class VMessParams
 
     [JsonPropertyName("mode")]
     public string? Mode { get; set; }
+
+    //
+    private static readonly JsonSerializerOptions _serializeOptions = new()
+    {
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+    };
+
+    public string ToJson() => JsonSerializer.Serialize(this, _serializeOptions);
 }
 
-public class VlessOptions
+abstract class QueryModel
+{
+    private static JsonSerializerOptions _options = new()
+    {
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+    };
+
+    public string ToQuery()
+    {
+        var json = JsonSerializer.Serialize(this, _options);
+        var dict = JsonSerializer.Deserialize<Dictionary<string, string>>(json)!;
+
+        return $"?{string.Join("&", dict.Select(x => $"{x.Key}={x.Value}"))}";
+    }
+}
+
+
+
+class TransferOptions : QueryModel
 {
     [JsonPropertyName("type")]
     public string? Type { get; set; }
@@ -486,9 +638,6 @@ public class VlessOptions
 
     [JsonPropertyName("host")]
     public string? Host { get; set; }
-
-    [JsonPropertyName("encryption")]
-    public string? Encryption { get; set; }
 
     [JsonPropertyName("headerType")]
     public string? HeaderType { get; set; }
@@ -519,32 +668,34 @@ public class VlessOptions
 
     [JsonPropertyName("allowInsecure")]
     public string? AllowInsecure { get; set; }
+}
 
-    [JsonPropertyName("sid")]
-    public string? ShortId { get; set; }
-
-    [JsonPropertyName("pqv")]
-    public string? Mldsa65Verify { get; set; }
-
-    [JsonPropertyName("pbk")]
-    public string? PublicKey { get; set; }
+class RealityTransferOptions : TransferOptions
+{
 
     [JsonPropertyName("flow")]
     public string? Flow { get; set; }
 
+    [JsonPropertyName("pbk")]
+    public string? PublicKey { get; set; }
+
+    [JsonPropertyName("pqv")]
+    public string? Mldsa65Verify { get; set; }
+
+    [JsonPropertyName("sid")]
+    public string? ShortId { get; set; }
+
     [JsonPropertyName("spx")]
     public string? SpiderX { get; set; }
-
-    private static JsonSerializerOptions _options = new()
-    {
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-    };
-
-    public string ToQuery()
-    {
-        var json = JsonSerializer.Serialize(this, _options);
-        var dict = JsonSerializer.Deserialize<Dictionary<string, string>>(json)!;
-
-        return $"?{string.Join("&", dict.Select(x => $"{x.Key}={x.Value}"))}";
-    }
 }
+
+class VlessOptions : RealityTransferOptions
+{
+
+    [JsonPropertyName("encryption")]
+    public string? Encryption { get; set; }
+}
+
+class TrojanOptions : RealityTransferOptions { }
+
+class ShadowSocksOptions : TransferOptions { }

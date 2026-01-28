@@ -14,19 +14,13 @@ public class VlessInbound : Inbound
     public VlessSettings Settings { get; set; } = new();
 }
 
-public class VlessClient : WithLevel
+public class VlessClient : InboundClient
 {   
     /// <summary>
     /// The VLESS user identifier can be any string less than 30 bytes long or a valid UUID.
     /// </summary>
     [JsonPropertyName("id")]
     public required string Id { get; set; }
-
-    /// <summary>
-    /// User email address, used to separate traffic from different users (displayed in logs, statistics).
-    /// </summary>
-    [JsonPropertyName("email")]
-    public required string Email { get; set; }
 
     /// <summary>
     /// Flow control mode, used to select the XTLS algorithm.

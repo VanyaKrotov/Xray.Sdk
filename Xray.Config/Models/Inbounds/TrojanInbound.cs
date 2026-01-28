@@ -14,17 +14,11 @@ public class TrojanInbound : Inbound
     public TrojanSettings Settings { get; set; } = new();
 }
 
-public class TrojanClient : WithLevel
+public class TrojanClient : InboundClient
 {
     /// <summary>
     /// Required parameter, any string.
     /// </summary>
     [JsonPropertyName("password")]
     public required string Password { get; set; }
-
-    /// <summary>
-    /// Email address, optional, used to identify the user.
-    /// </summary>
-    [JsonPropertyName("email")]
-    public required string Email { get; set; }
 }

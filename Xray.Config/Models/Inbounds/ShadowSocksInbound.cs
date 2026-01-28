@@ -30,10 +30,8 @@ public class ShadowSocksClient : WithLevel
     public EncryptionMethod? Method { get; set; }
 
     /// <summary>
-    /// User email address, used to separate traffic from different users (logs, statistics).
+    /// User email address, used to separate traffic from different users (displayed in logs, statistics).
     /// </summary>
     [JsonPropertyName("email")]
     public string? Email { get; set; }
-
-
 }

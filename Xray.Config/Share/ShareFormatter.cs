@@ -41,17 +41,17 @@ public abstract class ShareFormatter
 
         if (inbound is ShadowSocksInbound)
         {
-            return FromInbound((ShadowSocksInbound)inbound);
+            return FromInbound((ShadowSocksInbound)inbound, email);
         }
 
         if (inbound is SocksInbound)
         {
-            return FromInbound((SocksInbound)inbound);
+            return FromInbound((SocksInbound)inbound, email);
         }
 
         if (inbound is TrojanInbound)
         {
-            return FromInbound((TrojanInbound)inbound);
+            return FromInbound((TrojanInbound)inbound, email);
         }
 
         throw new ArgumentException($"Unsupport link: {inbound.Protocol}");
@@ -63,9 +63,14 @@ public abstract class ShareFormatter
     public abstract string FromInbound(VMessInbound inbound, string email);
     public abstract string FromInbound(VMessInbound inbound, VMessClient client);
 
-    public abstract string FromInbound(ShadowSocksInbound inbound);
-    public abstract string FromInbound(SocksInbound inbound);
-    public abstract string FromInbound(TrojanInbound inbound);
+    public abstract string FromInbound(ShadowSocksInbound inbound, ShadowSocksClient client);
+    public abstract string FromInbound(ShadowSocksInbound inbound, string email);
+    
+    public abstract string FromInbound(TrojanInbound inbound, TrojanClient client);
+    public abstract string FromInbound(TrojanInbound inbound, string email);
+
+    public abstract string FromInbound(SocksInbound inbound, SocksAccount account);
+    public abstract string FromInbound(SocksInbound inbound, string username);
 
     public abstract Outbound ToOutbound(string config);
     public abstract VlessOutbound ToVlessOutbound(string config);

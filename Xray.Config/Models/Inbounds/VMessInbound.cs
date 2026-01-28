@@ -14,20 +14,13 @@ public class VMessInbound : Inbound
     public VMessSettings Settings { get; set; } = new();
 }
 
-public class VMessClient : WithLevel
+public class VMessClient : InboundClient
 {
     /// <summary>
     /// The VMess user ID. This can be any string less than 30 bytes long or a valid UUID.
     /// </summary>
     [JsonPropertyName("id")]
     public required string Id { get; set; }
-
-    /// <summary>
-    /// The user's email address, used to separate traffic from different users.
-    /// </summary>
-    [JsonPropertyName("email")]
-    public string Email { get; set; } = string.Empty;
-
 }
 
 public class VMessDefaultSettings : WithLevel { }
