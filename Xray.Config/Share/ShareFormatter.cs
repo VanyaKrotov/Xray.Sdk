@@ -27,16 +27,16 @@ public abstract class ShareFormatter
         return "";
     }
 
-    public string FromInbound(Inbound inbound)
+    public string FromInbound(Inbound inbound, string email)
     {
         if (inbound is VlessInbound)
         {
-            return FromInbound((VlessInbound)inbound);
+            return FromInbound((VlessInbound)inbound, email);
         }
 
         if (inbound is VMessInbound)
         {
-            return FromInbound((VMessInbound)inbound);
+            return FromInbound((VMessInbound)inbound, email);
         }
 
         if (inbound is ShadowSocksInbound)
@@ -60,7 +60,9 @@ public abstract class ShareFormatter
     public abstract string FromInbound(VlessInbound inbound, string email);
     public abstract string FromInbound(VlessInbound inbound, VlessClient client);
 
-    public abstract string FromInbound(VMessInbound inbound);
+    public abstract string FromInbound(VMessInbound inbound, string email);
+    public abstract string FromInbound(VMessInbound inbound, VMessClient client);
+
     public abstract string FromInbound(ShadowSocksInbound inbound);
     public abstract string FromInbound(SocksInbound inbound);
     public abstract string FromInbound(TrojanInbound inbound);

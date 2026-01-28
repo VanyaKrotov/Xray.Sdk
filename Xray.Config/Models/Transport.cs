@@ -328,7 +328,7 @@ public class TlsSettings
     /// Used to configure a colon-separated list of supported cipher suites.
     /// </summary>
     [JsonPropertyName("cipherSuites")]
-    public string? cipherSuites { get; set; }
+    public string? CipherSuites { get; set; }
 
     /// <summary>
     /// A list of certificates, each element of which represents a certificate (fullchain recommended).

@@ -23,7 +23,7 @@ public abstract class Inbound
     /// Port.
     /// </summary>
     [JsonPropertyName("port")]
-    public required Port? Port { get; set; }
+    public required Port Port { get; set; }
 
     /// <summary>
     /// The name of the connection protocol. For a list of available protocols, see <see href="https://xtls.github.io/config/inbounds/">the Incoming Protocols section</see> in the left menu.
