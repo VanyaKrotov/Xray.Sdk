@@ -15,7 +15,7 @@ public class V2RayShareFormatter : ShareFormatter
     public V2RayShareFormatter() : base("v2ray") { }
 
     #region Vless
-    
+
     public override string FromInbound(VlessInbound inbound, VlessClient client)
     {
         var stream = inbound.StreamSettings;
@@ -58,10 +58,10 @@ public class V2RayShareFormatter : ShareFormatter
             Path = "",
             Port = (int)inbound.Port.Single!,
             Host = GetAddressOrDefault(inbound.Listen),
-            Query = options.ToQuery(),
+            Query = QueryUtilities.ToQuery(options),
         };
 
-        return builder.Uri.ToString();
+        return builder.ToString();
     }
 
     public override string FromInbound(VlessInbound inbound, string email)
@@ -238,7 +238,7 @@ public class V2RayShareFormatter : ShareFormatter
             part = $"{methodString}:{inbound.Settings?.Password ?? ""}:{client.Password}";
         }
 
-        var uriBuilder = new UriBuilder()
+        var builder = new UriBuilder()
         {
             Scheme = "ss",
             Path = "",
@@ -246,11 +246,11 @@ public class V2RayShareFormatter : ShareFormatter
             Password = "",
             Port = (int)inbound.Port.Single!,
             Host = GetAddressOrDefault(inbound.Listen),
-            Query = options.ToQuery(),
+            Query = QueryUtilities.ToQuery(options),
             Fragment = GetRemark(inbound)
         };
 
-        return uriBuilder.Uri.ToString();
+        return builder.ToString();
     }
 
     public override string FromInbound(ShadowSocksInbound inbound, string email)
@@ -304,10 +304,10 @@ public class V2RayShareFormatter : ShareFormatter
             Fragment = GetRemark(inbound),
             Port = (int)inbound.Port.Single!,
             Host = GetAddressOrDefault(inbound.Listen),
-            Query = options.ToQuery(),
+            Query = QueryUtilities.ToQuery(options),
         };
 
-        return builder.Uri.ToString();
+        return builder.ToString();
     }
 
     public override string FromInbound(TrojanInbound inbound, string email)
@@ -610,25 +610,23 @@ class VMessParams
     public string ToJson() => JsonSerializer.Serialize(this, _serializeOptions);
 }
 
-abstract class QueryModel
+static class QueryUtilities
 {
     private static JsonSerializerOptions _options = new()
     {
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
     };
 
-    public string ToQuery()
+    public static string ToQuery(object model)
     {
-        var json = JsonSerializer.Serialize(this, _options);
+        var json = JsonSerializer.Serialize(model, _options);
         var dict = JsonSerializer.Deserialize<Dictionary<string, string>>(json)!;
 
         return $"?{string.Join("&", dict.Select(x => $"{x.Key}={x.Value}"))}";
     }
 }
 
-
-
-class TransferOptions : QueryModel
+class TransferOptions
 {
     [JsonPropertyName("type")]
     public string? Type { get; set; }

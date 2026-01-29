@@ -1,4 +1,5 @@
-﻿using Xray.Config.Enums;
+﻿using System.Net.Http.Headers;
+using Xray.Config.Enums;
 using Xray.Config.Models;
 using Xray.Config.Share;
 using Xray.Core;
@@ -162,47 +163,58 @@ var libCore = new XrayLibCore(new XrayLibOptions()
 
 // var userUuid = libCore.GenerateUuidV4();
 // var keys = libCore.GenerateX25519Keys("example");
-var vlessInbound = new VlessInbound()
+var client = new VlessClient()
 {
-  Port = new Port(443),
-  Tag = "vless-in",
-  Settings = new()
+  Email = "example@test.com",
+  Id = "222232-32-3-2-3-23--23-2-3",
+  Flow = XtlsFlow.XtlsRprxVision,
+};
+
+var inbound = new VlessInbound()
+{
+  Port = new Port(10001),
+  Tag = "Vless in",
+  Settings = new Inbound.VlessSettings()
   {
-    Clients = [
-      new () {
-          Email = "test@example.com",
-          Id = "0123456789abcdef-0123456789abcde",
-          Flow = XtlsFlow.XtlsRprxVision,
-        }
-      ],
+    Clients = [client],
+    Decryption = VlessDecryption.None
   },
-  StreamSettings = new()
+  StreamSettings = new StreamSettings()
   {
     Network = StreamNetwork.Raw,
-    Security = StreamSecurity.Reality,
-    RealitySettings = new()
+    Security = StreamSecurity.Tls,
+    RawSettings = new RawSettings()
     {
-      Target = "google.com:443",
-      ServerNames = ["", "www.vk.com"],
-      PrivateKey = "example key",
-      ShortIds = ["", "0123456789abcdef"]
+      AcceptProxyProtocol = false,
+      Header = new HttpSettingsHeaders()
+      {
+        Request = new HttpRequest()
+        {
+          Path = ["/test"]
+        }
+      }
     },
-  },
-  Sniffing = new()
-  {
-    Enabled = true,
-    DestOverride = [
-      TrafficType.Http,
-      TrafficType.Tls,
-      TrafficType.Quic
-    ],
-    RouteOnly = true
+    TlsSettings = new TlsSettings()
+    {
+      AllowInsecure = true,
+      Alpn = ["h2", "h3"],
+      ServerName = "www.google.com",
+      Fingerprint = Fingerprint.iOS,
+      Certificates = new List<TlsCertificate>()
+      {
+        new TlsCertificate()
+        {
+          KeyFile = "test.key",
+          CertificateFile = "test.pem"
+        }
+      },
+    }
   }
 };
 
-var v2rayShare = new V2RayShareFormatter();
+var _shareFormatter = new V2RayShareFormatter();
 
-var v2RayVlessLink = v2rayShare.FromInbound(vlessInbound, "test@example.com");
+var tcpTlsLink = _shareFormatter.FromInbound(inbound, client);
 
 // var res = XrayConfig.FromJson(json);
 

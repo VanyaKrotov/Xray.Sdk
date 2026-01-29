@@ -25,19 +25,29 @@ public class RawSettings
 public abstract class BaseSettingsHeaders
 {
     [JsonPropertyName("type")]
-    public HeadersType Type { get; set; } = HeadersType.None;
+    public HeadersType Type { get; set; }
+
+    public BaseSettingsHeaders(HeadersType type)
+    {
+        Type = type;
+    }
 }
 
 /// <summary>
 /// No masking is performed.
 /// </summary>
-public class NoneSettingsHeaders : BaseSettingsHeaders { }
+public class NoneSettingsHeaders : BaseSettingsHeaders
+{
+    public NoneSettingsHeaders() : base(HeadersType.None) { }
+}
 
 /// <summary>
 /// The HTTP cloaking configuration must be the same on both the incoming and outgoing connection, and its contents must match.
 /// </summary>
 public class HttpSettingsHeaders : BaseSettingsHeaders
 {
+    public HttpSettingsHeaders() : base(HeadersType.Http) { }
+
     /// <summary>
     /// HTTP request.
     /// </summary>
@@ -48,7 +58,7 @@ public class HttpSettingsHeaders : BaseSettingsHeaders
     /// HTTP response.
     /// </summary>
     [JsonPropertyName("response")]
-    public HttpRequest HttpResponse { get; set; } = new();
+    public HttpRequest Response { get; set; } = new();
 }
 
 /// <summary>
