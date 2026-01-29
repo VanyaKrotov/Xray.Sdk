@@ -1,5 +1,4 @@
-﻿using System.Net.Http.Headers;
-using Xray.Config.Enums;
+﻿using Xray.Config.Enums;
 using Xray.Config.Models;
 using Xray.Config.Share;
 using Xray.Core;
@@ -68,7 +67,8 @@ using Xray.Core;
 
 var libCore = new XrayLibCore(new XrayLibOptions()
 {
-  LibPath = "native/windows_amd64.dll"
+  // LibPath = "native/windows_amd64.dll",
+  LibPath = "native/darwin_arm64.dylib",
 });
 
 // var json = @"
@@ -182,7 +182,7 @@ var inbound = new VlessInbound()
   StreamSettings = new StreamSettings()
   {
     Network = StreamNetwork.Raw,
-    Security = StreamSecurity.Tls,
+    Security = StreamSecurity.Reality,
     RawSettings = new RawSettings()
     {
       AcceptProxyProtocol = false,
@@ -194,20 +194,15 @@ var inbound = new VlessInbound()
         }
       }
     },
-    TlsSettings = new TlsSettings()
+    RealitySettings = new RealitySettings()
     {
-      AllowInsecure = true,
-      Alpn = ["h2", "h3"],
-      ServerName = "www.google.com",
+      Target = "www.google.com",
       Fingerprint = Fingerprint.iOS,
-      Certificates = new List<TlsCertificate>()
-      {
-        new TlsCertificate()
-        {
-          KeyFile = "test.key",
-          CertificateFile = "test.pem"
-        }
-      },
+      Show = false,
+      ServerNames = ["ya.com", "www.yandex.com"],
+      SpiderX = "/test",
+      Password = "342ojh42i3g4io23h4iu234jhc23fc432",
+      ShortIds = ["abcd"]
     }
   }
 };
@@ -225,9 +220,8 @@ var tcpTlsLink = _shareFormatter.FromInbound(inbound, client);
 
 var version = libCore.Version();
 
+Console.WriteLine(tcpTlsLink);
 Console.WriteLine($"Version: {version}");
-
-libCore.Stop();
 
 Console.WriteLine("Press key to close this window");
 Console.ReadKey();
