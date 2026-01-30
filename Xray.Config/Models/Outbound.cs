@@ -45,7 +45,7 @@ public abstract class Outbound
     /// Mux settings. Mux allows you to multiplex multiple TCP connections over a single TCP connection. Mux has an additional feature: transmitting UDP connections as XUDP.
     /// </summary>
     [JsonPropertyName("mux")]
-    public Mux? mux { get; set; }
+    public Mux? Mux { get; set; }
 
     /// <summary>
     /// When an outgoing connection sends a request to a domain name, this option controls whether and how it will be resolved to the outgoing IP address.

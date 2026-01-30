@@ -1,13 +1,19 @@
 using System.Collections.Specialized;
+using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Web;
 using Xray.Config.Enums;
 using Xray.Config.Models;
 using Xray.Config.Utilities;
 
 namespace Xray.Config.Share;
 
+/// <summary>
+/// Formatter for generate and parse shared links in v2Ray string format.
+/// <para>Supported protocols: Vless, VMess, Trojan, ShadowSocks, Socks, Hysteria.</para>
+/// </summary>
 public class V2RayShareFormatter : ShareFormatter
 {
     private static string DEFAULT_ADDRESS = "0.0.0.0";
@@ -15,7 +21,12 @@ public class V2RayShareFormatter : ShareFormatter
     public V2RayShareFormatter() : base("v2ray") { }
 
     #region Vless
-
+    /// <summary>
+    /// Generate Vless share link from xray inbound and client.
+    /// </summary>
+    /// <param name="inbound">Xray inbound</param>
+    /// <param name="client">Client to share</param>
+    /// <returns>Vless transfer link</returns>
     public override string FromInbound(VlessInbound inbound, VlessClient client)
     {
         var stream = inbound.StreamSettings;
@@ -31,8 +42,8 @@ public class V2RayShareFormatter : ShareFormatter
             Authority = streamOptions.Authority,
             ServiceName = streamOptions.ServiceName,
             HeaderType = streamOptions.HeaderType,
-            Security = EnumPropertyConverter.ToString(security),
-            Encryption = EnumPropertyConverter.ToString(inbound.Settings.Decryption),
+            Security = EnumStringConverter.ToString(security),
+            Encryption = EnumStringConverter.ToString(inbound.Settings.Decryption),
         };
 
         if (security == StreamSecurity.Tls && stream.TlsSettings != null)
@@ -46,7 +57,7 @@ public class V2RayShareFormatter : ShareFormatter
 
         if (stream.Network == StreamNetwork.Raw)
         {
-            options.Flow = EnumPropertyConverter.ToString(client.Flow);
+            options.Flow = EnumStringConverter.ToString(client.Flow);
         }
 
         var builder = new UriBuilder()
@@ -64,6 +75,13 @@ public class V2RayShareFormatter : ShareFormatter
         return builder.ToString();
     }
 
+    /// <summary>
+    /// Generate Vless share link from xray inbound by client email.
+    /// </summary>
+    /// <param name="inbound">Xray inbound</param>
+    /// <param name="email">Email of the client to share</param>
+    /// <returns>Vless transfer link</returns>
+    /// <exception cref="ArgumentException"></exception>
     public override string FromInbound(VlessInbound inbound, string email)
     {
         var client = inbound.Settings.Clients.FirstOrDefault(x => x.Email == email);
@@ -73,6 +91,49 @@ public class V2RayShareFormatter : ShareFormatter
         }
 
         return FromInbound(inbound, client);
+    }
+
+    /// <summary>
+    /// Parse Vless share link to xray outbound.
+    /// </summary>
+    /// <param name="config">Vless transfer link</param>
+    /// <returns>Vless outbound</returns>
+    /// <exception cref="ArgumentException"></exception>
+    public override VlessOutbound ParseVless(string config)
+    {
+        var uri = new Uri(config);
+        if (uri.Scheme != VLESS_PROTOCOL)
+        {
+            throw new ArgumentException("Invalid protocol.");
+        }
+
+        var options = QueryUtilities.FromQuery<VlessOptions>(uri.Query);
+        var streamSettings = ParseStreamSetting(options);
+
+        if (streamSettings.Security == StreamSecurity.Tls)
+        {
+            streamSettings.TlsSettings = ParseTlsSetting(options);
+        }
+        else if (streamSettings.Security == StreamSecurity.Reality)
+        {
+            streamSettings.RealitySettings = ParseRealitySettings(options);
+        }
+
+        var remark = WebUtility.UrlDecode(uri.Fragment);
+
+        return new VlessOutbound()
+        {
+            Tag = remark.Length > 0 ? remark.Substring(1) : $"out-{VLESS_PROTOCOL}-{uri.Port}",
+            StreamSettings = streamSettings,
+            Settings = new Outbound.VlessSettings()
+            {
+                Address = uri.Host,
+                Id = uri.UserInfo,
+                Port = uri.Port,
+                Flow = TryParseEnumValue(options.Flow, XtlsFlow.None),
+                Encryption = options.Encryption ?? "none",
+            }
+        };
     }
 
     #endregion
@@ -90,8 +151,8 @@ public class V2RayShareFormatter : ShareFormatter
             Remark = GetRemark(inbound),
             Port = (int)inbound.Port.Single!,
             Address = GetAddressOrDefault(inbound.Listen),
-            Network = EnumPropertyConverter.ToString(stream.Network),
-            Tls = EnumPropertyConverter.ToString(stream.Security)
+            Network = EnumStringConverter.ToString(stream.Network),
+            Tls = EnumStringConverter.ToString(stream.Security)
         };
 
         switch (stream.Network)
@@ -102,7 +163,7 @@ public class V2RayShareFormatter : ShareFormatter
                     var header = raw.Header;
                     if (header != null)
                     {
-                        options.Type = EnumPropertyConverter.ToString(header.Type);
+                        options.Type = EnumStringConverter.ToString(header.Type);
                     }
 
                     if (header != null && header is HttpSettingsHeaders)
@@ -121,7 +182,7 @@ public class V2RayShareFormatter : ShareFormatter
                     var header = kcp.Header ?? new();
 
                     options.Path = kcp.Seed ?? "";
-                    options.Type = EnumPropertyConverter.ToString(header.Type);
+                    options.Type = EnumStringConverter.ToString(header.Type);
                 }
                 break;
 
@@ -163,7 +224,7 @@ public class V2RayShareFormatter : ShareFormatter
 
                     options.Path = xhttp.Path ?? "";
                     options.Host = xhttp.Host == null ? SearchHost(xhttp.Headers) : xhttp.Host;
-                    options.Mode = EnumPropertyConverter.ToString(xhttp.Mode);
+                    options.Mode = EnumStringConverter.ToString(xhttp.Mode);
                 }
                 break;
         }
@@ -183,7 +244,7 @@ public class V2RayShareFormatter : ShareFormatter
 
             if (tls.Fingerprint != null)
             {
-                options.Fingerprint = EnumPropertyConverter.ToString((Fingerprint)tls.Fingerprint);
+                options.Fingerprint = EnumStringConverter.ToString((Fingerprint)tls.Fingerprint);
             }
 
             if (tls.AllowInsecure)
@@ -206,10 +267,21 @@ public class V2RayShareFormatter : ShareFormatter
         return FromInbound(inbound, client);
     }
 
+    public override VMessOutbound ParseVMess(string config)
+    {
+        throw new NotImplementedException();
+    }
+
     #endregion
 
     #region ShadowSocks
 
+    /// <summary>
+    /// Generate ShadowSocks share link from xray inbound and client.
+    /// </summary>
+    /// <param name="inbound">Xray inbound</param>
+    /// <param name="client">Client to share</param>
+    /// <returns>ShadowSocks transfer link</returns>
     public override string FromInbound(ShadowSocksInbound inbound, ShadowSocksClient client)
     {
         var stream = inbound.StreamSettings;
@@ -231,7 +303,7 @@ public class V2RayShareFormatter : ShareFormatter
             GetTlsOptions(stream.TlsSettings, options);
         }
 
-        var methodString = inbound.Settings?.Method != null ? EnumPropertyConverter.ToString((EncryptionMethod)inbound.Settings.Method) : "";
+        var methodString = inbound.Settings?.Method != null ? EnumStringConverter.ToString((EncryptionMethod)inbound.Settings.Method) : "";
         var part = $"{methodString}:{client.Password}";
         if (methodString.StartsWith("2022"))
         {
@@ -253,6 +325,12 @@ public class V2RayShareFormatter : ShareFormatter
         return builder.ToString();
     }
 
+    /// <summary>
+    /// Generate ShadowSocks share link from xray inbound by client email.
+    /// </summary>
+    /// <param name="inbound">Xray inbound</param>
+    /// <param name="client">Client to share</param>
+    /// <returns>ShadowSocks transfer link</returns>
     public override string FromInbound(ShadowSocksInbound inbound, string email)
     {
         var client = inbound.Settings?.Clients.FirstOrDefault(x => x.Email == email);
@@ -264,10 +342,55 @@ public class V2RayShareFormatter : ShareFormatter
         return FromInbound(inbound, client);
     }
 
+    /// <summary>
+    /// Parse ShadowSocks share link to xray outbound.
+    /// </summary>
+    /// <param name="config">ShadowSocks transfer link</param>
+    /// <returns>ShadowSocks outbound</returns>
+    /// <exception cref="ArgumentException"></exception>
+    public override ShadowSocksOutbound ParseShadowSocks(string config)
+    {
+        var uri = new Uri(config);
+        if (uri.Scheme != SHADOW_SOCKS_PROTOCOL)
+        {
+            throw new ArgumentException("Invalid protocol.");
+        }
+
+        var options = QueryUtilities.FromQuery<ShadowSocksOptions>(uri.Query);
+        var streamSettings = ParseStreamSetting(options);
+
+        if (streamSettings.Security == StreamSecurity.Tls)
+        {
+            streamSettings.TlsSettings = ParseTlsSetting(options);
+        }
+
+        var remark = WebUtility.UrlDecode(uri.Fragment);
+        var userData = Encoding.UTF8.GetString(Convert.FromBase64String(uri.UserInfo)).Split(":");
+
+        return new ShadowSocksOutbound()
+        {
+            Tag = remark.Length > 0 ? remark.Substring(1) : $"out-{SHADOW_SOCKS_PROTOCOL}-{uri.Port}",
+            StreamSettings = streamSettings,
+            Settings = new Outbound.ShadowSocksSettings()
+            {
+                Port = uri.Port,
+                Address = uri.Host,
+                Password = string.Join(":", userData[1..]),
+                Method = TryParseEnumValue(userData[0], EncryptionMethod.None),
+            }
+        };
+    }
+
     #endregion
 
     #region  Trojan
 
+    /// <summary>
+    /// Generate Trojan share link from xray inbound and client.
+    /// </summary>
+    /// <param name="inbound">Xray inbound</param>
+    /// <param name="client">Client to share</param>
+    /// <returns>Trojan transfer link</returns>
     public override string FromInbound(TrojanInbound inbound, TrojanClient client)
     {
         var stream = inbound.StreamSettings;
@@ -283,7 +406,7 @@ public class V2RayShareFormatter : ShareFormatter
             Authority = streamOptions.Authority,
             ServiceName = streamOptions.ServiceName,
             HeaderType = streamOptions.HeaderType,
-            Security = EnumPropertyConverter.ToString(security),
+            Security = EnumStringConverter.ToString(security),
         };
 
         if (security == StreamSecurity.Tls && stream.TlsSettings != null)
@@ -310,6 +433,12 @@ public class V2RayShareFormatter : ShareFormatter
         return builder.ToString();
     }
 
+    /// <summary>
+    /// Generate Trojan share link from xray inbound by client email.
+    /// </summary>
+    /// <param name="inbound">Xray inbound</param>
+    /// <param name="client">Client to share</param>
+    /// <returns>Trojan transfer link</returns>
     public override string FromInbound(TrojanInbound inbound, string email)
     {
         var client = inbound.Settings?.Clients.FirstOrDefault(x => x.Email == email);
@@ -321,9 +450,52 @@ public class V2RayShareFormatter : ShareFormatter
         return FromInbound(inbound, client);
     }
 
+    /// <summary>
+    /// Parse Trojan share link to xray outbound.
+    /// </summary>
+    /// <param name="config">Trojan transfer link</param>
+    /// <returns>Trojan outbound</returns>
+    /// <exception cref="ArgumentException"></exception>
+    public override TrojanOutbound ParseTrojan(string config)
+    {
+        var uri = new Uri(config);
+        if (uri.Scheme != TROJAN_PROTOCOL)
+        {
+            throw new ArgumentException("Invalid protocol.");
+        }
+
+        var options = QueryUtilities.FromQuery<TrojanOptions>(uri.Query);
+        var streamSettings = ParseStreamSetting(options);
+
+        if (streamSettings.Security == StreamSecurity.Tls)
+        {
+            streamSettings.TlsSettings = ParseTlsSetting(options);
+        }
+        else if (streamSettings.Security == StreamSecurity.Reality)
+        {
+            streamSettings.RealitySettings = ParseRealitySettings(options);
+        }
+
+        var remark = WebUtility.UrlDecode(uri.Fragment);
+
+        return new TrojanOutbound()
+        {
+            Tag = remark.Length > 0 ? remark.Substring(1) : $"out-{TROJAN_PROTOCOL}-{uri.Port}",
+            StreamSettings = streamSettings,
+            Settings = new Outbound.TrojanSettings()
+            {
+                Address = uri.Host,
+                Port = uri.Port,
+                Password = uri.UserInfo
+            }
+        };
+    }
+
     #endregion
 
     #region Socks
+
+    // TODO: need check handing stream settings in transfer link
 
     public override string FromInbound(SocksInbound inbound, SocksAccount account)
     {
@@ -352,45 +524,42 @@ public class V2RayShareFormatter : ShareFormatter
         return FromInbound(inbound, client);
     }
 
+    public override SocksOutbound ParseSocks(string config)
+    {
+        var uri = new Uri(config);
+        if (uri.Scheme != SOCKS_PROTOCOL)
+        {
+            throw new ArgumentException("Invalid protocol.");
+        }
+
+        var remark = WebUtility.UrlDecode(uri.Fragment);
+        var userData = uri.UserInfo.Split(":");
+
+        return new SocksOutbound()
+        {
+            Tag = remark.Length > 0 ? remark.Substring(1) : $"out-{SOCKS_PROTOCOL}-{uri.Port}",
+            Settings = new Outbound.SocksSettings()
+            {
+                Address = uri.Host,
+                Port = uri.Port,
+                User = userData[0],
+                Password = userData[1]
+            }
+        };
+    }
+
     #endregion
 
-    public override HysteriaOutbound ToHysteriaOutbound(string config)
+    #region Hysteria
+
+    public override HysteriaOutbound ParseHysteria(string config)
     {
         throw new NotImplementedException();
     }
 
-    public override Outbound ToOutbound(string config)
-    {
-        throw new NotImplementedException();
-    }
+    #endregion
 
-    public override ShadowSocksOutbound ToShadowSocksOutbound(string config)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override SocksOutbound ToSocksOutbound(string config)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override TrojanOutbound ToTrojanOutbound(string config)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override VlessOutbound ToVlessOutbound(string config)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override VMessOutbound ToVMessOutbound(string config)
-    {
-        throw new NotImplementedException();
-    }
-
-
-    // private utilities
+    #region  private utilities
 
     private void GetTlsOptions(TlsSettings tlsSettings, TransferOptions options)
     {
@@ -407,7 +576,7 @@ public class V2RayShareFormatter : ShareFormatter
 
         if (tlsSettings.Fingerprint != null)
         {
-            options.Fingerprint = EnumPropertyConverter.ToString((Fingerprint)tlsSettings.Fingerprint);
+            options.Fingerprint = EnumStringConverter.ToString((Fingerprint)tlsSettings.Fingerprint);
         }
 
         if (tlsSettings.AllowInsecure)
@@ -438,7 +607,7 @@ public class V2RayShareFormatter : ShareFormatter
             options.Mldsa65Verify = reality.Mldsa65Verify;
         }
 
-        options.Fingerprint = EnumPropertyConverter.ToString(reality.Fingerprint);
+        options.Fingerprint = EnumStringConverter.ToString(reality.Fingerprint);
         options.SpiderX = $"/{RandomUtilities.Seq(15)}";
     }
 
@@ -446,7 +615,7 @@ public class V2RayShareFormatter : ShareFormatter
     {
         var options = new StreamOptions()
         {
-            Type = EnumPropertyConverter.ToString(stream.Network),
+            Type = EnumStringConverter.ToString(stream.Network),
         };
 
         switch (stream.Network)
@@ -471,7 +640,7 @@ public class V2RayShareFormatter : ShareFormatter
                     var kcp = stream.KcpSettings ?? new();
                     var header = kcp.Header ?? new();
 
-                    options.HeaderType = EnumPropertyConverter.ToString(header.Type);
+                    options.HeaderType = EnumStringConverter.ToString(header.Type);
                     options.Seed = kcp.Seed;
                 }
                 break;
@@ -514,7 +683,7 @@ public class V2RayShareFormatter : ShareFormatter
 
                     options.Path = xhttp.Path;
                     options.Host = xhttp.Host == null ? SearchHost(xhttp.Headers) : xhttp.Host;
-                    options.Mode = EnumPropertyConverter.ToString(xhttp.Mode);
+                    options.Mode = EnumStringConverter.ToString(xhttp.Mode);
                 }
                 break;
         }
@@ -522,6 +691,106 @@ public class V2RayShareFormatter : ShareFormatter
 
         return options;
     }
+
+    private StreamSettings ParseStreamSetting(TransferOptions options)
+    {
+        var streamSettings = new StreamSettings()
+        {
+            Network = TryParseEnumValue(options.Type, StreamNetwork.Raw),
+            Security = TryParseEnumValue(options.Security, StreamSecurity.None)
+        };
+
+        switch (streamSettings.Network)
+        {
+            case StreamNetwork.Raw:
+                streamSettings.RawSettings = new RawSettings()
+                {
+                    Header = TryParseEnumValue(options.HeaderType, HeadersType.None) == HeadersType.None ? new NoneSettingsHeaders() : new HttpSettingsHeaders()
+                    {
+                        Request = new HttpRequest()
+                        {
+                            Path = string.IsNullOrEmpty(options.Path) ? [] : [options.Path],
+                            Headers = string.IsNullOrEmpty(options.Path) ? new NameValueCollection() : new NameValueCollection() {
+                                    { "host", options.Host }
+                                },
+                        }
+                    }
+                };
+
+                break;
+
+            case StreamNetwork.Kcp:
+                streamSettings.KcpSettings = new KcpSettings()
+                {
+                    Header = new KCPHeaders()
+                    {
+                        Type = TryParseEnumValue(options.HeaderType, KcpHeaderType.None)
+                    },
+                    Seed = options.Path
+                };
+
+                break;
+
+            case StreamNetwork.Ws:
+                streamSettings.WSSettings = new WSSettings()
+                {
+                    Path = options.Path,
+                    Host = options.Host,
+                };
+
+                break;
+
+            case StreamNetwork.Grpc:
+                streamSettings.GRPCSettings = new GRPCSettings()
+                {
+                    ServiceName = options.ServiceName ?? "",
+                    Authority = options.Authority ?? "",
+                    MultiMode = options.Mode == "multi"
+                };
+
+                break;
+
+            case StreamNetwork.HttpUpgrade:
+                streamSettings.HttpUpgradeSettings = new HttpUpgradeSettings()
+                {
+                    Path = options.Path,
+                    Host = options.Host
+                };
+
+                break;
+
+            case StreamNetwork.XHttp:
+                streamSettings.XHttpSettings = new XHttpSettings()
+                {
+                    Path = options.Path,
+                    Host = options.Host,
+                    Mode = TryParseEnumValue(options.Mode, XHttpMode.Auto)
+                };
+
+                break;
+        }
+
+        return streamSettings;
+    }
+
+    private TlsSettings ParseTlsSetting(TransferOptions options) => new TlsSettings()
+    {
+        ServerName = options.ServerName,
+        EchConfigList = options.EchConfigList,
+        Alpn = options.Alpn?.Split(",").ToList(),
+        AllowInsecure = options.AllowInsecure == "1",
+        Fingerprint = TryParseEnumValue(options.Fingerprint, Fingerprint.None),
+    };
+
+    private RealitySettings ParseRealitySettings(RealityTransferOptions options) => new RealitySettings()
+    {
+        Password = options.PublicKey,
+        Fingerprint = TryParseEnumValue(options.Fingerprint, Fingerprint.Chrome),
+        ServerName = options.ServerName ?? "",
+        ShortId = options.ShortId ?? "",
+        SpiderX = options.SpiderX ?? "",
+        Mldsa65Verify = options.Mldsa65Verify ?? "",
+    };
 
     private string SearchHost(NameValueCollection headers)
     {
@@ -531,6 +800,11 @@ public class V2RayShareFormatter : ShareFormatter
     }
 
     private string GetAddressOrDefault(string? listen) => string.IsNullOrEmpty(listen) ? DEFAULT_ADDRESS : listen;
+
+    private T TryParseEnumValue<T>(string? value, T defaultValue) where T : struct, Enum => value == null ? defaultValue : EnumStringConverter.TryParse(value, defaultValue);
+    private T? TryParseEnumValue<T>(string? value) where T : struct, Enum => value == null ? null : EnumStringConverter.TryParse<T>(value);
+
+    #endregion
 }
 
 class StreamOptions
@@ -601,13 +875,14 @@ class VMessParams
     [JsonPropertyName("mode")]
     public string? Mode { get; set; }
 
-    //
     private static readonly JsonSerializerOptions _serializeOptions = new()
     {
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
     };
 
     public string ToJson() => JsonSerializer.Serialize(this, _serializeOptions);
+
+    public static VMessParams FromJson(string json) => JsonSerializer.Deserialize<VMessParams>(json, _serializeOptions)!;
 }
 
 static class QueryUtilities
@@ -623,6 +898,34 @@ static class QueryUtilities
         var dict = JsonSerializer.Deserialize<Dictionary<string, string>>(json)!;
 
         return $"?{string.Join("&", dict.Select(x => $"{x.Key}={x.Value}"))}";
+    }
+
+    public static T FromQuery<T>(string query) where T : new()
+    {
+        var validQuery = query.Trim();
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            throw new ArgumentException("Invalid query argument");
+        }
+
+        if (validQuery.StartsWith("?"))
+        {
+            validQuery = validQuery.Substring(1);
+        }
+
+        var dict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var pairs = validQuery.Split('&', StringSplitOptions.RemoveEmptyEntries);
+
+        foreach (var pair in pairs)
+        {
+            var parts = pair.Split('=', 2);
+            var key = HttpUtility.UrlDecode(parts[0]);
+            var value = parts.Length > 1 ? HttpUtility.UrlDecode(parts[1]) : "";
+
+            dict[key] = value;
+        }
+
+        return JsonSerializer.Deserialize<T>(JsonSerializer.Serialize(dict, _options), _options)!;
     }
 }
 
@@ -661,6 +964,9 @@ class TransferOptions
     [JsonPropertyName("sni")]
     public string? ServerName { get; set; }
 
+    [JsonPropertyName("ech")]
+    public string? EchConfigList { get; set; }
+
     [JsonPropertyName("fp")]
     public string? Fingerprint { get; set; }
 
@@ -689,7 +995,6 @@ class RealityTransferOptions : TransferOptions
 
 class VlessOptions : RealityTransferOptions
 {
-
     [JsonPropertyName("encryption")]
     public string? Encryption { get; set; }
 }
@@ -697,3 +1002,5 @@ class VlessOptions : RealityTransferOptions
 class TrojanOptions : RealityTransferOptions { }
 
 class ShadowSocksOptions : TransferOptions { }
+
+

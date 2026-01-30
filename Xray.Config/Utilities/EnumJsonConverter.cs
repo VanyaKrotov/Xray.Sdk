@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace Xray.Config.Utilities;
 
-static class EnumPropertyConverter
+static class EnumStringConverter
 {
     public static string ToString<T>(T value) where T : struct, Enum
     {
@@ -14,10 +14,11 @@ static class EnumPropertyConverter
         return attr?.Alias ?? value.ToString();
     }
 
-    public static T FromString<T>(string value) where T : struct, Enum
+    public static T TryParse<T>(string value, T defaultValue) where T : struct, Enum => TryParse<T>(value) ?? defaultValue;
+
+    public static T? TryParse<T>(string value) where T : struct, Enum
     {
         var fields = typeof(T).GetFields(BindingFlags.Public | BindingFlags.Static);
-
         foreach (var field in fields)
         {
             var attributes = field.GetCustomAttributes(typeof(EnumProperty), false).Cast<EnumProperty>().Select(a => a.Alias);
@@ -27,20 +28,22 @@ static class EnumPropertyConverter
             }
         }
 
-        return Enum.Parse<T>(value, true);
+        return null;
     }
+
+    public static T Parse<T>(string value) where T : struct, Enum => TryParse<T>(value, Enum.Parse<T>(value, true));
 }
 
 public class SplitEnumConverter<T> : JsonConverter<List<T>> where T : struct, Enum
 {
     public override List<T> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        return reader.GetString()!.Split(",").Select(EnumPropertyConverter.FromString<T>).ToList();
+        return reader.GetString()!.Split(",").Select(EnumStringConverter.Parse<T>).ToList();
     }
 
     public override void Write(Utf8JsonWriter writer, List<T> value, JsonSerializerOptions options)
     {
-        writer.WriteStringValue(string.Join(",", value.Select(EnumPropertyConverter.ToString)));
+        writer.WriteStringValue(string.Join(",", value.Select(EnumStringConverter.ToString)));
     }
 }
 

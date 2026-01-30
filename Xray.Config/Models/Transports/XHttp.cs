@@ -31,7 +31,7 @@ public class XHttpSettings
     /// The sharing scheme for the original JSON for all parameters except host, path, mode. When extra is present, only these four parameters are valid.
     /// </summary>
     [JsonPropertyName("extra")]
-    public XHttpExtraSettings? Extra { get; set; }
+    public XHttpExtraSettings Extra { get; set; } = new();
 
     /// <summary>
     /// Additional HTTP headers.
@@ -67,7 +67,15 @@ public class XHttpExtraSettings
     public string? ScStreamUpServerSecs { get; set; }
 
     [JsonPropertyName("xmux")]
-    public XMux? XMux { get; set; }
+    public XMux XMux { get; set; } = new()
+    {
+        MaxConcurrency = "16-32",
+        MaxConnections = 0,
+        CMaxReuseTimes = 0,
+        HMaxRequestTimes = "600-900",
+        HMaxReusableSecs = "1800-3000",
+        HKeepAlivePeriod = 0
+    };
 
     [JsonPropertyName("downloadSettings")]
     public XHttpDownloadSettings? DownloadSettings { get; set; }

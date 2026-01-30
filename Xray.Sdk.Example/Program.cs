@@ -67,8 +67,8 @@ using Xray.Core;
 
 var libCore = new XrayLibCore(new XrayLibOptions()
 {
-  // LibPath = "native/windows_amd64.dll",
-  LibPath = "native/darwin_arm64.dylib",
+  LibPath = "native/windows_amd64.dll",
+  // LibPath = "native/darwin_arm64.dylib",
 });
 
 // var json = @"
@@ -210,6 +210,8 @@ var inbound = new VlessInbound()
 var _shareFormatter = new V2RayShareFormatter();
 
 var tcpTlsLink = _shareFormatter.FromInbound(inbound, client);
+
+var inb = _shareFormatter.ParseVless(tcpTlsLink);
 
 // var res = XrayConfig.FromJson(json);
 
