@@ -24,10 +24,10 @@ public class V2RayShareFormatter : ShareFormatter
     /// <summary>
     /// Generate Vless share link from xray inbound and client.
     /// </summary>
-    /// <param name="inbound">Xray inbound</param>
+    /// <param name="inbound">Vless inbound</param>
     /// <param name="client">Client to share</param>
     /// <returns>Vless transfer link</returns>
-    public override string FromInbound(VlessInbound inbound, VlessClient client)
+    public override string CreateLink(VlessInbound inbound, VlessClient client)
     {
         var stream = inbound.StreamSettings;
         var streamOptions = GetStreamOptions(stream);
@@ -62,7 +62,7 @@ public class V2RayShareFormatter : ShareFormatter
 
         var builder = new UriBuilder()
         {
-            Scheme = "vless",
+            Scheme = VLESS_PROTOCOL,
             Fragment = GetRemark(inbound),
             UserName = client.Id,
             Password = "",
@@ -78,11 +78,11 @@ public class V2RayShareFormatter : ShareFormatter
     /// <summary>
     /// Generate Vless share link from xray inbound by client email.
     /// </summary>
-    /// <param name="inbound">Xray inbound</param>
+    /// <param name="inbound">Vless inbound</param>
     /// <param name="email">Email of the client to share</param>
     /// <returns>Vless transfer link</returns>
     /// <exception cref="ArgumentException"></exception>
-    public override string FromInbound(VlessInbound inbound, string email)
+    public override string CreateLink(VlessInbound inbound, string email)
     {
         var client = inbound.Settings.Clients.FirstOrDefault(x => x.Email == email);
         if (client == null)
@@ -90,7 +90,7 @@ public class V2RayShareFormatter : ShareFormatter
             throw new ArgumentException($"Client for Email = {email} not found in inbound {inbound.Tag}");
         }
 
-        return FromInbound(inbound, client);
+        return CreateLink(inbound, client);
     }
 
     /// <summary>
@@ -140,10 +140,16 @@ public class V2RayShareFormatter : ShareFormatter
 
     #region VMess
 
-    public override string FromInbound(VMessInbound inbound, VMessClient client)
+    /// <summary>
+    /// Generate VMess share link from xray inbound and client.
+    /// </summary>
+    /// <param name="inbound"VMess inbound></param>
+    /// <param name="client">Client to share</param>
+    /// <returns>VMess transfer link</returns>
+    public override string CreateLink(VMessInbound inbound, VMessClient client)
     {
         var stream = inbound.StreamSettings;
-        var options = new VMessParams()
+        var options = new VMessTransferOptions()
         {
             Type = "none",
             Version = "2",
@@ -253,10 +259,16 @@ public class V2RayShareFormatter : ShareFormatter
             }
         }
 
-        return $"vmess://{Convert.ToBase64String(Encoding.UTF8.GetBytes(options.ToJson()))}";
+        return $"{VMESS_PROTOCOL}://{Base64.Encode(options.ToJson())}";
     }
 
-    public override string FromInbound(VMessInbound inbound, string email)
+    /// <summary>
+    /// Generate VMess share link from xray inbound and client.
+    /// </summary>
+    /// <param name="inbound"VMess inbound></param>
+    /// <param name="email">Email of the client to share</param>
+    /// <returns>VMess transfer link</returns>
+    public override string CreateLink(VMessInbound inbound, string email)
     {
         var client = inbound.Settings.Clients.FirstOrDefault(x => x.Email == email);
         if (client == null)
@@ -264,12 +276,130 @@ public class V2RayShareFormatter : ShareFormatter
             throw new ArgumentException($"Client for Email = {email} not found in inbound {inbound.Tag}");
         }
 
-        return FromInbound(inbound, client);
+        return CreateLink(inbound, client);
     }
 
+    /// <summary>
+    /// Parse VMess share link to xray outbound.
+    /// </summary>
+    /// <param name="config">VMess transfer link</param>
+    /// <returns>VMess outbound</returns>
+    /// <exception cref="ArgumentException"></exception>
     public override VMessOutbound ParseVMess(string config)
     {
-        throw new NotImplementedException();
+        var index = config.IndexOf(":");
+        if (index == -1)
+        {
+            throw new ArgumentException("Invalid link format.");
+        }
+
+        var protocol = config.Substring(0, index);
+        if (protocol != VMESS_PROTOCOL)
+        {
+            throw new ArgumentException("Invalid protocol.");
+        }
+
+        var data = config.Substring(index + 3);
+        var options = VMessTransferOptions.FromJson(Base64.Decode(data));
+        var streamSettings = new StreamSettings()
+        {
+            Network = TryParseEnumValue(options.Network, StreamNetwork.Raw),
+            Security = TryParseEnumValue(options.Tls, StreamSecurity.None),
+        };
+
+        switch (streamSettings.Network)
+        {
+            case StreamNetwork.Raw:
+                streamSettings.RawSettings = new RawSettings()
+                {
+                    Header = TryParseEnumValue(options.Type, HeadersType.None) == HeadersType.None ? new NoneSettingsHeaders() : new HttpSettingsHeaders()
+                    {
+                        Request = new HttpRequest()
+                        {
+                            Path = string.IsNullOrEmpty(options.Path) ? [] : [options.Path],
+                            Headers = string.IsNullOrEmpty(options.Path) ? new NameValueCollection() : new NameValueCollection() {
+                                    { "host", options.Host }
+                                },
+                        }
+                    }
+                };
+
+                break;
+
+            case StreamNetwork.Kcp:
+                streamSettings.KcpSettings = new KcpSettings()
+                {
+                    Header = new KCPHeaders()
+                    {
+                        Type = TryParseEnumValue(options.Type, KcpHeaderType.None)
+                    },
+                    Seed = options.Path
+                };
+
+                break;
+
+            case StreamNetwork.Ws:
+                streamSettings.WSSettings = new WSSettings()
+                {
+                    Path = options.Path,
+                    Host = options.Host,
+                };
+
+                break;
+
+            case StreamNetwork.Grpc:
+                streamSettings.GRPCSettings = new GRPCSettings()
+                {
+                    ServiceName = options.Path ?? "",
+                    Authority = options.Authority ?? "",
+                    MultiMode = options.Type == "multi"
+                };
+
+                break;
+
+            case StreamNetwork.HttpUpgrade:
+                streamSettings.HttpUpgradeSettings = new HttpUpgradeSettings()
+                {
+                    Path = options.Path,
+                    Host = options.Host
+                };
+
+                break;
+
+            case StreamNetwork.XHttp:
+                streamSettings.XHttpSettings = new XHttpSettings()
+                {
+                    Path = options.Path,
+                    Host = options.Host,
+                    Mode = TryParseEnumValue(options.Mode, XHttpMode.Auto)
+                };
+
+                break;
+        }
+
+        if (streamSettings.Security == StreamSecurity.Tls)
+        {
+            streamSettings.TlsSettings = new TlsSettings()
+            {
+                ServerName = options.ServerName,
+                Alpn = options.Alpn?.Split(",").ToList(),
+                Fingerprint = TryParseEnumValue(options.Fingerprint, Fingerprint.None),
+                AllowInsecure = options.AllowInsecure
+            };
+        }
+
+        return new VMessOutbound()
+        {
+            Tag = string.IsNullOrEmpty(options.Remark) ? $"out-{VMESS_PROTOCOL}-{options.Port}" : options.Remark,
+            StreamSettings = streamSettings,
+            Settings = new Outbound.VMessSettings()
+            {
+                Address = options.Address,
+                Port = options.Port,
+                Id = options.Id,
+                Security = TryParseEnumValue(options.ClientSecurity, VMessSecurity.None),
+            },
+        };
     }
 
     #endregion
@@ -282,7 +412,7 @@ public class V2RayShareFormatter : ShareFormatter
     /// <param name="inbound">Xray inbound</param>
     /// <param name="client">Client to share</param>
     /// <returns>ShadowSocks transfer link</returns>
-    public override string FromInbound(ShadowSocksInbound inbound, ShadowSocksClient client)
+    public override string CreateLink(ShadowSocksInbound inbound, ShadowSocksClient client)
     {
         var stream = inbound.StreamSettings;
         var streamOptions = GetStreamOptions(stream);
@@ -312,9 +442,9 @@ public class V2RayShareFormatter : ShareFormatter
 
         var builder = new UriBuilder()
         {
-            Scheme = "ss",
+            Scheme = SHADOW_SOCKS_PROTOCOL,
             Path = "",
-            UserName = Convert.ToBase64String(Encoding.UTF8.GetBytes(part)),
+            UserName = Base64.Encode(part),
             Password = "",
             Port = (int)inbound.Port.Single!,
             Host = GetAddressOrDefault(inbound.Listen),
@@ -331,7 +461,7 @@ public class V2RayShareFormatter : ShareFormatter
     /// <param name="inbound">Xray inbound</param>
     /// <param name="client">Client to share</param>
     /// <returns>ShadowSocks transfer link</returns>
-    public override string FromInbound(ShadowSocksInbound inbound, string email)
+    public override string CreateLink(ShadowSocksInbound inbound, string email)
     {
         var client = inbound.Settings?.Clients.FirstOrDefault(x => x.Email == email);
         if (client == null)
@@ -339,7 +469,7 @@ public class V2RayShareFormatter : ShareFormatter
             throw new ArgumentException($"Client for Email = {email} not found in inbound {inbound.Tag}");
         }
 
-        return FromInbound(inbound, client);
+        return CreateLink(inbound, client);
     }
 
     /// <summary>
@@ -365,7 +495,7 @@ public class V2RayShareFormatter : ShareFormatter
         }
 
         var remark = WebUtility.UrlDecode(uri.Fragment);
-        var userData = Encoding.UTF8.GetString(Convert.FromBase64String(uri.UserInfo)).Split(":");
+        var userData = Base64.Decode(uri.UserInfo).Split(":");
 
         return new ShadowSocksOutbound()
         {
@@ -388,10 +518,10 @@ public class V2RayShareFormatter : ShareFormatter
     /// <summary>
     /// Generate Trojan share link from xray inbound and client.
     /// </summary>
-    /// <param name="inbound">Xray inbound</param>
+    /// <param name="inbound">Trojan inbound</param>
     /// <param name="client">Client to share</param>
     /// <returns>Trojan transfer link</returns>
-    public override string FromInbound(TrojanInbound inbound, TrojanClient client)
+    public override string CreateLink(TrojanInbound inbound, TrojanClient client)
     {
         var stream = inbound.StreamSettings;
         var streamOptions = GetStreamOptions(stream);
@@ -422,7 +552,7 @@ public class V2RayShareFormatter : ShareFormatter
         {
             Path = "",
             Password = "",
-            Scheme = "trojan",
+            Scheme = TROJAN_PROTOCOL,
             UserName = client.Password,
             Fragment = GetRemark(inbound),
             Port = (int)inbound.Port.Single!,
@@ -436,10 +566,10 @@ public class V2RayShareFormatter : ShareFormatter
     /// <summary>
     /// Generate Trojan share link from xray inbound by client email.
     /// </summary>
-    /// <param name="inbound">Xray inbound</param>
+    /// <param name="inbound">Trojan inbound</param>
     /// <param name="client">Client to share</param>
     /// <returns>Trojan transfer link</returns>
-    public override string FromInbound(TrojanInbound inbound, string email)
+    public override string CreateLink(TrojanInbound inbound, string email)
     {
         var client = inbound.Settings?.Clients.FirstOrDefault(x => x.Email == email);
         if (client == null)
@@ -447,7 +577,7 @@ public class V2RayShareFormatter : ShareFormatter
             throw new ArgumentException($"Client for Email = {email} not found in inbound {inbound.Tag}");
         }
 
-        return FromInbound(inbound, client);
+        return CreateLink(inbound, client);
     }
 
     /// <summary>
@@ -496,13 +626,18 @@ public class V2RayShareFormatter : ShareFormatter
     #region Socks
 
     // TODO: need check handing stream settings in transfer link
-
-    public override string FromInbound(SocksInbound inbound, SocksAccount account)
+    /// <summary>
+    /// Generate Socks share link from xray inbound and client.
+    /// </summary>
+    /// <param name="inbound">Socks inbound</param>
+    /// <param name="account">Client to share</param>
+    /// <returns>Socks transfer link</returns>
+    public override string CreateLink(SocksInbound inbound, SocksAccount account)
     {
         var uriBuilder = new UriBuilder()
         {
             Path = "",
-            Scheme = "socks",
+            Scheme = SOCKS_PROTOCOL,
             UserName = account.User,
             Password = account.Password,
             Fragment = GetRemark(inbound),
@@ -513,7 +648,14 @@ public class V2RayShareFormatter : ShareFormatter
         return uriBuilder.Uri.ToString();
     }
 
-    public override string FromInbound(SocksInbound inbound, string username)
+    /// <summary>
+    /// Generate Trojan share link from xray inbound by client email.
+    /// </summary>
+    /// <param name="inbound">Socks inbound</param>
+    /// <param name="username">Client to share</param>
+    /// <returns>Socks transfer link</returns>
+    /// <exception cref="ArgumentException"></exception>
+    public override string CreateLink(SocksInbound inbound, string username)
     {
         var client = inbound.Settings?.Accounts.FirstOrDefault(x => x.User == username);
         if (client == null)
@@ -521,9 +663,15 @@ public class V2RayShareFormatter : ShareFormatter
             throw new ArgumentException($"Client for Username = {username} not found in inbound {inbound.Tag}");
         }
 
-        return FromInbound(inbound, client);
+        return CreateLink(inbound, client);
     }
 
+    /// <summary>
+    /// Parse Socks share link to xray outbound.
+    /// </summary>
+    /// <param name="config">Socks transfer link</param>
+    /// <returns>Socks outbound</returns>
+    /// <exception cref="ArgumentException"></exception>
     public override SocksOutbound ParseSocks(string config)
     {
         var uri = new Uri(config);
@@ -552,6 +700,7 @@ public class V2RayShareFormatter : ShareFormatter
 
     #region Hysteria
 
+    // Unsupported
     public override HysteriaOutbound ParseHysteria(string config)
     {
         throw new NotImplementedException();
@@ -819,7 +968,7 @@ class StreamOptions
     public string? Type { get; set; }
 }
 
-class VMessParams
+class VMessTransferOptions
 {
     [JsonPropertyName("add")]
     public required string Address { get; set; }
@@ -882,7 +1031,7 @@ class VMessParams
 
     public string ToJson() => JsonSerializer.Serialize(this, _serializeOptions);
 
-    public static VMessParams FromJson(string json) => JsonSerializer.Deserialize<VMessParams>(json, _serializeOptions)!;
+    public static VMessTransferOptions FromJson(string json) => JsonSerializer.Deserialize<VMessTransferOptions>(json, _serializeOptions)!;
 }
 
 static class QueryUtilities
@@ -1003,4 +1152,9 @@ class TrojanOptions : RealityTransferOptions { }
 
 class ShadowSocksOptions : TransferOptions { }
 
+static class Base64
+{
+    public static string Encode(string value) => Convert.ToBase64String(Encoding.UTF8.GetBytes(value));
 
+    public static string Decode(string value) => Encoding.UTF8.GetString(Convert.FromBase64String(value));
+}

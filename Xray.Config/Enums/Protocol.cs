@@ -26,7 +26,10 @@ public enum InboundProtocol
     Trojan,
 
     [EnumProperty("wireguard")]
-    Wireguard
+    Wireguard,
+   
+    [EnumProperty("tun")]
+    Tun
 }
 
 public enum OutboundProtocol

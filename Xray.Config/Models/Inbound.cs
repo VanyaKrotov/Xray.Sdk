@@ -231,6 +231,21 @@ public abstract class Inbound
         [JsonPropertyName("mtu")]
         public int? Mtu { get; set; }
     }
+
+    public class TUNSettings : WithUserLevel
+    {
+        /// <summary>
+        /// The name of the created TUN interface. Default is "xray0".
+        /// </summary>
+        [JsonPropertyName("name")]
+        public string? Name { get; set; }
+
+        /// <summary>
+        /// The MTU of the interface. Default is 1500.
+        /// </summary>
+        [JsonPropertyName("MTU")]
+        public int MTU { get; set; } = 1500;
+    }
 }
 
 /// <summary>
@@ -295,7 +310,8 @@ public class InboundConfigConverter : JsonConverter<Inbound>
         { InboundProtocol.Trojan, typeof(TrojanInbound) },
         { InboundProtocol.Vless, typeof(VlessInbound) },
         { InboundProtocol.VMess, typeof(VMessInbound) },
-        { InboundProtocol.Wireguard, typeof(WireguardInbound) }
+        { InboundProtocol.Wireguard, typeof(WireguardInbound) },
+        { InboundProtocol.Tun, typeof(TUNInbound) }
     };
 
     public override Inbound Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)

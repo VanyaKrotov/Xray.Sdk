@@ -3,68 +3,6 @@ using Xray.Config.Models;
 using Xray.Config.Share;
 using Xray.Core;
 
-// var config = new XrayConfig()
-// {
-//     Log = new LogConfig()
-//     {
-//         LogLevel = LogLevel.Error
-//     },
-//     Dns = new DnsConfig()
-//     {
-//         Servers = new List<DnsServer>()
-//         {
-//             new DnsServer()
-//             {
-//                 Address = "8.8.8.8"
-//             }
-//         }
-//     },
-//     Inbounds = new List<Inbound>()
-//     {
-//         new HttpInbound()
-//         {
-//             Port = new Port(8081),
-//             Tag = "Tag",
-//         },
-//         new DokodemoDoorInbound()
-//         {
-//             Port = new Port(10000),
-//             Tag = "Decodemo",
-//             Settings = new Inbound.DokodemoDoorSettings()
-//             {
-//                 Network = new List<TransportProtocol>() {TransportProtocol.Tcp, TransportProtocol.Udp}
-//             }
-//         }
-//     },
-//     Outbounds = new List<Outbound>
-//     {
-//         new FreedomOutbound()
-//         {
-//             Tag = "freedom"
-//         }
-//     },
-//     Api = new ApiConfig()
-//     {
-//         Tag = "api",
-//         Listen = "localhost:10022",
-//         Services = new List<string>()
-//         {
-//             ApiServices.Handler,
-//             ApiServices.Logger,
-//         }
-//     },
-//     Stats = new StatsConfig(),
-//     Version = new VersionConfig()
-//     {
-//         Min = "25.9.12"
-//     }
-// };
-
-// var processCore = new XrayProcessCore(new XrayProcessOptions()
-// {
-//     WorkingDirectory = "C:\\Users\\vanya\\Downloads\\Xray-windows-64"
-// });
-
 var libCore = new XrayLibCore(new XrayLibOptions()
 {
   LibPath = "native/windows_amd64.dll",
@@ -163,20 +101,66 @@ var libCore = new XrayLibCore(new XrayLibOptions()
 
 // var userUuid = libCore.GenerateUuidV4();
 // var keys = libCore.GenerateX25519Keys("example");
-var client = new VlessClient()
+var client = new VMessClient()
+{
+  Email = "example@test.com",
+  Id = "26a28e07-8509-45b4-844a-6d881593d7de",
+};
+
+var inbound = new VMessInbound()
+{
+  Port = new Port(10001),
+  Tag = "VMess in",
+  Settings = new Inbound.VMessSettings()
+  {
+    Clients = [client],
+  },
+  StreamSettings = new StreamSettings()
+  {
+    Network = StreamNetwork.Raw,
+    Security = StreamSecurity.None,
+    RawSettings = new RawSettings()
+    {
+      AcceptProxyProtocol = false,
+      Header = new HttpSettingsHeaders()
+      {
+        Request = new HttpRequest()
+        {
+          Path = ["/test"]
+        }
+      }
+    },
+    RealitySettings = new RealitySettings()
+    {
+      Target = "www.google.com",
+      Fingerprint = Fingerprint.iOS,
+      Show = false,
+      ServerNames = ["ya.com", "www.yandex.com"],
+      SpiderX = "/test",
+      Password = "342ojh42i3g4io23h4iu234jhc23fc432",
+      ShortIds = ["abcd"]
+    }
+  }
+};
+
+var _shareFormatter = new V2RayShareFormatter();
+
+var tcpTlsLink = _shareFormatter.CreateLink(inbound, client);
+
+var _client = new VlessClient()
 {
   Email = "example@test.com",
   Id = "222232-32-3-2-3-23--23-2-3",
   Flow = XtlsFlow.XtlsRprxVision,
 };
 
-var inbound = new VlessInbound()
+var _inbound = new VlessInbound()
 {
   Port = new Port(10001),
   Tag = "Vless in",
   Settings = new Inbound.VlessSettings()
   {
-    Clients = [client],
+    Clients = [_client],
     Decryption = VlessDecryption.None
   },
   StreamSettings = new StreamSettings()
@@ -207,11 +191,9 @@ var inbound = new VlessInbound()
   }
 };
 
-var _shareFormatter = new V2RayShareFormatter();
+var link = _shareFormatter.CreateLink(_inbound, _client);
 
-var tcpTlsLink = _shareFormatter.FromInbound(inbound, client);
-
-var inb = _shareFormatter.ParseVless(tcpTlsLink);
+var inb = _shareFormatter.Parse(tcpTlsLink);
 
 // var res = XrayConfig.FromJson(json);
 

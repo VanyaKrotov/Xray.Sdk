@@ -35,37 +35,37 @@ public abstract class ShareFormatter
         return "";
     }
 
-    public string FromInbound(Inbound inbound, string email)
+    public string CreateLink(Inbound inbound, string email)
     {
         if (inbound is VlessInbound)
         {
-            return FromInbound((VlessInbound)inbound, email);
+            return CreateLink((VlessInbound)inbound, email);
         }
 
         if (inbound is VMessInbound)
         {
-            return FromInbound((VMessInbound)inbound, email);
+            return CreateLink((VMessInbound)inbound, email);
         }
 
         if (inbound is ShadowSocksInbound)
         {
-            return FromInbound((ShadowSocksInbound)inbound, email);
+            return CreateLink((ShadowSocksInbound)inbound, email);
         }
 
         if (inbound is SocksInbound)
         {
-            return FromInbound((SocksInbound)inbound, email);
+            return CreateLink((SocksInbound)inbound, email);
         }
 
         if (inbound is TrojanInbound)
         {
-            return FromInbound((TrojanInbound)inbound, email);
+            return CreateLink((TrojanInbound)inbound, email);
         }
 
         throw new ArgumentException($"Unsupport link: {inbound.Protocol}");
     }
 
-    public Outbound ToOutbound(string config)
+    public Outbound Parse(string config)
     {
         var separateIndex = config.IndexOf("://");
         if (separateIndex == -1)
@@ -101,24 +101,24 @@ public abstract class ShareFormatter
     }
 
 
-    public abstract string FromInbound(VlessInbound inbound, string email);
-    public abstract string FromInbound(VlessInbound inbound, VlessClient client);
+    public abstract string CreateLink(VlessInbound inbound, string email);
+    public abstract string CreateLink(VlessInbound inbound, VlessClient client);
     public abstract VlessOutbound ParseVless(string config);
 
-    public abstract string FromInbound(VMessInbound inbound, string email);
-    public abstract string FromInbound(VMessInbound inbound, VMessClient client);
+    public abstract string CreateLink(VMessInbound inbound, string email);
+    public abstract string CreateLink(VMessInbound inbound, VMessClient client);
     public abstract VMessOutbound ParseVMess(string config);
 
-    public abstract string FromInbound(ShadowSocksInbound inbound, ShadowSocksClient client);
-    public abstract string FromInbound(ShadowSocksInbound inbound, string email);
+    public abstract string CreateLink(ShadowSocksInbound inbound, ShadowSocksClient client);
+    public abstract string CreateLink(ShadowSocksInbound inbound, string email);
     public abstract ShadowSocksOutbound ParseShadowSocks(string config);
 
-    public abstract string FromInbound(TrojanInbound inbound, TrojanClient client);
-    public abstract string FromInbound(TrojanInbound inbound, string email);
+    public abstract string CreateLink(TrojanInbound inbound, TrojanClient client);
+    public abstract string CreateLink(TrojanInbound inbound, string email);
     public abstract TrojanOutbound ParseTrojan(string config);
 
-    public abstract string FromInbound(SocksInbound inbound, SocksAccount account);
-    public abstract string FromInbound(SocksInbound inbound, string username);
+    public abstract string CreateLink(SocksInbound inbound, SocksAccount account);
+    public abstract string CreateLink(SocksInbound inbound, string username);
     public abstract SocksOutbound ParseSocks(string config);
 
     public abstract HysteriaOutbound ParseHysteria(string config);

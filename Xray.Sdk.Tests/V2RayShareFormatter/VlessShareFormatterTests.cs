@@ -1,14 +1,14 @@
-﻿using Xray.Config.Enums;
+using Xray.Config.Enums;
 using Xray.Config.Models;
 using Xray.Config.Share;
 
-namespace XTLS_SDK.Tests;
+namespace Xray.Sdk.Tests;
 
-public class V2RayShareFormatterTests
+public class VlessShareFormatterTests
 {
     private readonly V2RayShareFormatter _shareFormatter = new();
 
-    [Fact]
+    [Fact(DisplayName = "Vless Raw + None")]
     public void Vless_RAW_NONE_Test()
     {
         var client = new VlessClient()
@@ -33,12 +33,12 @@ public class V2RayShareFormatterTests
             }
         };
 
-        var link = _shareFormatter.FromInbound(inbound, client);
+        var link = _shareFormatter.CreateLink(inbound, client);
 
         Assert.Equal("vless://222232-32-3-2-3-23--23-2-3@0.0.0.0:10001/?encryption=none&flow=xtls-rprx-vision&type=raw&security=none#Vless in", link);
     }
 
-    [Fact]
+    [Fact(DisplayName = "Vless Raw + Tls")]
     public void Vless_RAW_TLS_Test()
     {
         var client = new VlessClient()
@@ -90,12 +90,12 @@ public class V2RayShareFormatterTests
             }
         };
 
-        var link = _shareFormatter.FromInbound(inbound, client);
+        var link = _shareFormatter.CreateLink(inbound, client);
 
         Assert.Equal("vless://222232-32-3-2-3-23--23-2-3@0.0.0.0:10001/?encryption=none&flow=xtls-rprx-vision&type=raw&path=/test&host=&headerType=http&security=tls&alpn=h2,h3&sni=www.google.com&fp=ios&allowInsecure=1#Vless in", link);
     }
 
-    [Fact]
+    [Fact(DisplayName = "Vless Raw + Reality")]
     public void Vless_RAW_Reality_Test()
     {
         var client = new VlessClient()
@@ -134,7 +134,7 @@ public class V2RayShareFormatterTests
                     Target = "www.google.com",
                     Fingerprint = Fingerprint.iOS,
                     Show = false,
-                    ServerNames = ["ya.com", "www.yandex.com"],
+                    ServerNames = ["www.yandex.com"],
                     SpiderX = "/test",
                     Password = "342ojh42i3g4io23h4iu234jhc23fc432",
                     ShortIds = ["abcd"]
@@ -142,8 +142,8 @@ public class V2RayShareFormatterTests
             }
         };
 
-        var link = _shareFormatter.FromInbound(inbound, client);
+        var link = _shareFormatter.CreateLink(inbound, client);
 
-        Assert.Matches(@"^vless:\/\/[A-Za-z0-9\-]+@0\.0\.0\.0:10001\/\?encryption=none&flow=xtls-rprx-vision&pbk=[A-Za-z0-9]+&sid=abcd&spx=\/[A-Za-z0-9]+&type=raw&path=\/test&host=&headerType=http&security=reality&sni=www\.yandex\.com&fp=ios#Vless in$", link);
+        Assert.Matches(@"^vless:\/\/222232-32-3-2-3-23--23-2-3@0\.0\.0\.0\:10001\/\?encryption=none&flow=xtls-rprx-vision&pbk=342ojh42i3g4io23h4iu234jhc23fc432&sid=abcd&spx=\/[A-Za-z0-9]+&type=raw&path=\/test&host=&headerType=http&security=reality&sni=www\.yandex\.com&fp=ios#Vless in$", link);
     }
 }
