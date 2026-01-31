@@ -204,7 +204,7 @@ public abstract class Outbound
         /// Shadowsocks server address; IPv4, IPv6, and domain names are supported. Required.
         /// </summary>
         [JsonPropertyName("address")]
-        public required string Address { get; set; }
+        public string? Address { get; set; }
 
         /// <summary>
         /// Shadowsocks server port.
@@ -236,6 +236,9 @@ public abstract class Outbound
         /// </summary>
         [JsonPropertyName("UoTVersion")]
         public int? UoTVersion { get; set; }
+
+        [JsonPropertyName("servers")]
+        public IEnumerable<ShadowSocksServer>? Servers { get; set; }
     }
 
     public class SocksSettings : WithLevel
@@ -277,7 +280,7 @@ public abstract class Outbound
         /// Server address; IPv4, IPv6, and domain names are supported.
         /// </summary>
         [JsonPropertyName("address")]
-        public required string Address { get; set; }
+        public string? Address { get; set; }
 
         /// <summary>
         /// The server port, usually the same as the port the server is listening on.
@@ -286,16 +289,19 @@ public abstract class Outbound
         public int? Port { get; set; }
 
         /// <summary>
-        /// Password. Required, any string.
+        /// Password.
         /// </summary>
         [JsonPropertyName("password")]
-        public required string Password { get; set; }
+        public string? Password { get; set; }
 
         /// <summary>
         /// Email address, optional, used to identify the user.
         /// </summary>
         [JsonPropertyName("email")]
         public string? Email { get; set; }
+
+        [JsonPropertyName("servers")]
+        public IEnumerable<TrojanServer>? Servers { get; set; }
     }
 
     public class VlessSettings : WithLevel
@@ -304,25 +310,25 @@ public abstract class Outbound
         /// Server address pointing to the server, domain names, IPv4 and IPv6 are supported.
         /// </summary>
         [JsonPropertyName("address")]
-        public required string Address { get; set; }
+        public string? Address { get; set; }
 
         /// <summary>
         /// The server port, usually the same as the port the server is listening on.
         /// </summary>
         [JsonPropertyName("port")]
-        public required int Port { get; set; }
+        public int? Port { get; set; }
 
         /// <summary>
         /// The VLESS user identifier can be any string less than 30 bytes long or a valid UUID.
         /// </summary>
         [JsonPropertyName("id")]
-        public required string Id { get; set; }
+        public string? Id { get; set; }
 
         /// <summary>
         /// VLESS encryption settings . This cannot be empty; to disable it, you must explicitly set the value "none".
         /// </summary>
         [JsonPropertyName("encryption")]
-        public string Encryption { get; set; } = "none";
+        public string? Encryption { get; set; }
 
         /// <summary>
         /// Flow control mode, used to select the XTLS algorithm.
@@ -335,6 +341,12 @@ public abstract class Outbound
         /// </summary>
         [JsonPropertyName("reverse")]
         public VlessReverse? Reverse { get; set; }
+
+        /// <summary>
+        /// Client only. External server endpoints.
+        /// </summary>
+        [JsonPropertyName("vnext")]
+        public IEnumerable<VlessVNext>? VNext { get; set; }
     }
 
     public class VMessSettings : WithLevel
@@ -343,7 +355,7 @@ public abstract class Outbound
         /// Server address, IP address or domain name supported.
         /// </summary>
         [JsonPropertyName("address")]
-        public required string Address { get; set; }
+        public string? Address { get; set; }
 
         /// <summary>
         /// The port number the server listens on is a required parameter.
@@ -355,7 +367,7 @@ public abstract class Outbound
         /// The VMess user ID, can be any string less than 30 bytes long or a valid UUID.
         /// </summary>
         [JsonPropertyName("id")]
-        public required string Id { get; set; }
+        public string? Id { get; set; }
 
         /// <summary>
         /// Encryption method. The client will send data using the configured encryption method; the server will automatically detect it; no configuration is required on the server.
@@ -372,6 +384,9 @@ public abstract class Outbound
         /// </summary>
         [JsonPropertyName("experiments")]
         public string? Experiments { get; set; }
+
+        [JsonPropertyName("vnext")]
+        public IEnumerable<VMessVNext>? VNext { get; set; }
     }
 
     public class WireguardSettings

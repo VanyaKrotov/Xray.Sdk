@@ -34,7 +34,7 @@ public class RealitySettings
     /// Required parameter, list of those available serverName to the client, wildcards * are not supported yet.
     /// </summary>
     [JsonPropertyName("serverNames")]
-    public List<string> ServerNames { get; set; } = new List<string>() { string.Empty };
+    public IEnumerable<string>? ServerNames { get; set; }
 
     /// <summary>
     /// A required parameter, generated using the command ./xray x25519.

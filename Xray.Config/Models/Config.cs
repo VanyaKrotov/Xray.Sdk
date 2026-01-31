@@ -57,14 +57,14 @@ public class XrayConfig
     /// </summary>
     [JsonPropertyOrder(6)]
     [JsonPropertyName("inbounds")]
-    public List<Inbound> Inbounds { get; set; } = new();
+    public IEnumerable<Inbound> Inbounds { get; set; } = [];
 
     /// <summary>
     /// An array where each element represents an outgoing connection configuration.
     /// </summary>
     [JsonPropertyOrder(7)]
     [JsonPropertyName("outbounds")]
-    public List<Outbound> Outbounds { get; set; } = new();
+    public IEnumerable<Outbound> Outbounds { get; set; } = [];
 
     /// <summary>
     /// Transport is the way the current Xray node interacts with other nodes.
@@ -92,7 +92,7 @@ public class XrayConfig
     /// </summary>
     [JsonPropertyOrder(11)]
     [JsonPropertyName("fakedns")]
-    public List<FaceDnsConfig>? FaceDns { get; set; }
+    public IEnumerable<FaceDnsConfig>? FaceDns { get; set; }
 
     /// <summary>
     /// An easier (and hopefully better) way to export statistics.
@@ -136,8 +136,11 @@ public class XrayConfig
         _options = new JsonSerializerOptions()
         {
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            WriteIndented = true,
         };
 
         _options.Converters.Add(new UniversalEnumConverterFactory());
+        _options.Converters.Add(new NameValueCollectionConverter());
     }
 }

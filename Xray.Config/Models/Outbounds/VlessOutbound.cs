@@ -19,3 +19,23 @@ public class VlessReverse
     [JsonPropertyName("tag")]
     public required string Tag { get; set; }
 }
+
+public class VlessUser : WithLevel
+{
+    /// <summary>
+    /// The VLESS user identifier can be any string less than 30 bytes long or a valid UUID.
+    /// </summary>
+    [JsonPropertyName("id")]
+    public required string Id { get; set; }
+
+    [JsonPropertyName("encryption")]
+    public VlessEncryption Encryption { get; set; } = VlessEncryption.None;
+
+    [JsonPropertyName("email")]
+    public string? Email { get; set; }
+
+    [JsonPropertyName("flow")]
+    public XtlsFlow? Flow { get; set; }
+}
+
+public class VlessVNext : VNextModel<VlessUser> { }

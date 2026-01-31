@@ -147,41 +147,78 @@ var _shareFormatter = new V2RayShareFormatter();
 
 // var tcpTlsLink = _shareFormatter.CreateLink(inbound, client);
 
-var client = new ShadowSocksClient()
-{
-  Email = "example@test.com",
-  Password = "password",
-  Method = EncryptionMethod.Chacha20Poly1305
-};
+// var client = new ShadowSocksClient()
+// {
+//   Email = "example@test.com",
+//   Password = "password",
+//   Method = EncryptionMethod.Chacha20Poly1305
+// };
 
-var inbound = new ShadowSocksInbound()
+// var inbound = new ShadowSocksInbound()
+// {
+//   Port = new Port(10001),
+//   Tag = "ShadowSocks in",
+//   Settings = new Inbound.ShadowSocksSettings()
+//   {
+//     Clients = [client],
+//   },
+//   StreamSettings = new StreamSettings()
+//   {
+//     Network = StreamNetwork.Raw,
+//     Security = StreamSecurity.None,
+//   }
+// };
+
+// var link = _shareFormatter.CreateLink(inbound, client);
+
+Console.WriteLine("Enter configuration:");
+string? input;
+
+do
 {
-  Port = new Port(10001),
-  Tag = "ShadowSocks in",
-  Settings = new Inbound.ShadowSocksSettings()
+  input = Console.ReadLine();
+  if (string.IsNullOrEmpty(input))
   {
-    Clients = [client],
-  },
-  StreamSettings = new StreamSettings()
-  {
-    Network = StreamNetwork.Raw,
-    Security = StreamSecurity.None,
+    Console.WriteLine("Failed to load config");
   }
+
+} while (string.IsNullOrEmpty(input));
+
+var config = new XrayConfig()
+{
+  Log = new LogConfig()
+  {
+    LogLevel = LogLevel.Warning,
+  },
+  Inbounds =
+  [
+    new HttpInbound()
+    {
+      Port = new Port(10023),
+      Tag = "http-in",
+      Listen = "127.0.0.1",
+    }
+  ],
+  Outbounds = [
+    _shareFormatter.Parse(input)
+  ],
 };
 
-var link = _shareFormatter.CreateLink(inbound, client);
 
 // var res = XrayConfig.FromJson(json);
 
-// var processVersion = processCore.Version();
-
-// processCore.Start(config);
-// processCore.Stop();
-
 var version = libCore.Version();
 
-// Console.WriteLine(tcpTlsLink);
+libCore.Start(config);
+
+Console.WriteLine("Server started");
+Console.ReadKey();
+
 Console.WriteLine($"Version: {version}");
+
+libCore.Stop();
+
+// Console.WriteLine(tcpTlsLink);
 
 Console.WriteLine("Press key to close this window");
 Console.ReadKey();

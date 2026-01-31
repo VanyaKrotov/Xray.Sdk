@@ -55,7 +55,7 @@ public class VlessShareFormatterTests
             Settings = new Inbound.VlessSettings()
             {
                 Clients = [client],
-                Decryption = VlessDecryption.None
+                Decryption = VlessEncryption.None
             },
             StreamSettings = new StreamSettings()
             {
@@ -112,7 +112,7 @@ public class VlessShareFormatterTests
             Settings = new Inbound.VlessSettings()
             {
                 Clients = [client],
-                Decryption = VlessDecryption.None
+                Decryption = VlessEncryption.None
             },
             StreamSettings = new StreamSettings()
             {

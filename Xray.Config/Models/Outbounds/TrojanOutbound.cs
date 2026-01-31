@@ -11,3 +11,4 @@ public class TrojanOutbound : Outbound
     public TrojanSettings? Settings { get; set; }
 }
 
+public class TrojanServer : ClientServer { }

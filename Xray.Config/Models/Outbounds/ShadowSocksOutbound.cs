@@ -10,3 +10,12 @@ public class ShadowSocksOutbound : Outbound
     [JsonPropertyName("settings")]
     public ShadowSocksSettings? Settings { get; set; }
 }
+
+public class ShadowSocksServer : ClientServer
+{
+    /// <summary>
+    /// Required parameter.
+    /// </summary>
+    [JsonPropertyName("method")]
+    public EncryptionMethod? Method { get; set; }
+}

@@ -187,7 +187,7 @@ public abstract class Inbound
         /// <see href="https://github.com/XTLS/Xray-core/pull/5067">VLESS encryption settings</see>. This cannot be empty; to disable it, you must explicitly set the value "none".
         /// </summary>
         [JsonPropertyName("decryption")]
-        public VlessDecryption Decryption { get; set; } = VlessDecryption.None;
+        public VlessEncryption Decryption { get; set; } = VlessEncryption.None;
 
         /// <summary>
         /// An array containing a series of fallback routing configurations (optional). For details on configuring fallbacks, see FallbackObject.

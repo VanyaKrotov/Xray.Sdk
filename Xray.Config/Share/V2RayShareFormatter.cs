@@ -125,13 +125,21 @@ public class V2RayShareFormatter : ShareFormatter
         {
             Tag = remark.Length > 0 ? remark.Substring(1) : $"out-{VLESS_PROTOCOL}-{uri.Port}",
             StreamSettings = streamSettings,
-            Settings = new Outbound.VlessSettings()
+            Settings = new()
             {
-                Address = uri.Host,
-                Id = uri.UserInfo,
-                Port = uri.Port,
-                Flow = TryParseEnumValue(options.Flow, XtlsFlow.None),
-                Encryption = options.Encryption ?? "none",
+                VNext = [
+                    new VlessVNext() {
+                        Address = uri.Host,
+                        Port = uri.Port,
+                        Users = [
+                            new VlessUser() {
+                                Id = uri.UserInfo,
+                                Flow = TryParseEnumValue(options.Flow, XtlsFlow.None),
+                                Encryption = TryParseEnumValue(options.Encryption, VlessEncryption.None),
+                            }
+                        ]
+                    }
+                ]
             }
         };
     }
@@ -394,10 +402,19 @@ public class V2RayShareFormatter : ShareFormatter
             StreamSettings = streamSettings,
             Settings = new Outbound.VMessSettings()
             {
-                Address = options.Address,
-                Port = options.Port,
-                Id = options.Id,
-                Security = TryParseEnumValue(options.ClientSecurity, VMessSecurity.None),
+                VNext = [
+                    new VMessVNext() {
+                         Address = options.Address,
+                        Port = options.Port,
+                        Users = [
+                            new VMessUser() {
+                                Id = options.Id,
+                                Security = TryParseEnumValue(options.ClientSecurity, VMessSecurity.None),
+                                AlterId = int.TryParse(options.AlterId, out int alterId) ? alterId : 0,
+                            }
+                        ]
+                    }
+                ]
             },
         };
     }
@@ -503,10 +520,14 @@ public class V2RayShareFormatter : ShareFormatter
             StreamSettings = streamSettings,
             Settings = new Outbound.ShadowSocksSettings()
             {
-                Port = uri.Port,
-                Address = uri.Host,
-                Password = string.Join(":", userData[1..]),
-                Method = TryParseEnumValue(userData[0], EncryptionMethod.None),
+                Servers = [
+                    new ShadowSocksServer() {
+                        Address = uri.Host,
+                        Port = uri.Port,
+                        Password = string.Join(":", userData[1..]),
+                        Method = TryParseEnumValue(userData[0], EncryptionMethod.None),
+                    }
+                ]
             }
         };
     }
@@ -614,9 +635,13 @@ public class V2RayShareFormatter : ShareFormatter
             StreamSettings = streamSettings,
             Settings = new Outbound.TrojanSettings()
             {
-                Address = uri.Host,
-                Port = uri.Port,
-                Password = uri.UserInfo
+                Servers = [
+                    new TrojanServer() {
+                        Address = uri.Host,
+                        Port = uri.Port,
+                        Password = uri.UserInfo,
+                    }
+                ]
             }
         };
     }
@@ -736,9 +761,9 @@ public class V2RayShareFormatter : ShareFormatter
 
     private void GetRealityOptions(RealitySettings reality, RealityTransferOptions options)
     {
-        if (reality.ServerNames.Count > 0)
+        if (reality.ServerNames != null && reality.ServerNames.Count() > 0)
         {
-            options.ServerName = reality.ServerNames.ElementAt(RandomUtilities.GetInRange(0, reality.ServerNames.Count));
+            options.ServerName = reality.ServerNames.ElementAt(RandomUtilities.GetInRange(0, reality.ServerNames.Count()));
         }
 
         if (reality.Password != null)
@@ -1016,7 +1041,7 @@ class VMessTransferOptions
     public string Host { get; set; } = string.Empty;
 
     [JsonPropertyName("aid")]
-    public string Aid { get; set; } = "0";
+    public string AlterId { get; set; } = "0";
 
     [JsonPropertyName("authority")]
     public string? Authority { get; set; }
