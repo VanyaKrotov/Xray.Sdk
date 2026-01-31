@@ -15,7 +15,7 @@ public class ShadowSocksInbound : Inbound
     public ShadowSocksSettings? Settings { get; set; }
 }
 
-public class ShadowSocksClient : WithLevel
+public class ShadowSocksCommon : WithLevel
 {
     /// <summary>
     /// Required for Shadowsocks 2022. A pre-shared key similar to WireGuard is used as the password.
@@ -28,7 +28,10 @@ public class ShadowSocksClient : WithLevel
     /// </summary>
     [JsonPropertyName("method")]
     public EncryptionMethod? Method { get; set; }
+}
 
+public class ShadowSocksClient : ShadowSocksCommon
+{
     /// <summary>
     /// User email address, used to separate traffic from different users (displayed in logs, statistics).
     /// </summary>

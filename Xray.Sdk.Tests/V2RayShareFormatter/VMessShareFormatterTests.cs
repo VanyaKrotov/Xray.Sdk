@@ -9,7 +9,7 @@ public class VMessShareFormatterTests
     private readonly V2RayShareFormatter _shareFormatter = new();
 
     [Fact(DisplayName = "VMess Raw + Tls")]
-    public void VMess_RAW_Tls_Test()
+    public void RAW_Tls_Test()
     {
         var client = new VMessClient()
         {

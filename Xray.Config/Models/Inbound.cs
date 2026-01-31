@@ -112,7 +112,7 @@ public abstract class Inbound
         public bool AllowTransparent { get; set; }
     }
 
-    public class ShadowSocksSettings : ShadowSocksClient
+    public class ShadowSocksSettings : ShadowSocksCommon
     {
         /// <summary>
         /// ShadowSocks clients

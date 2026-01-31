@@ -101,17 +101,64 @@ var libCore = new XrayLibCore(new XrayLibOptions()
 
 // var userUuid = libCore.GenerateUuidV4();
 // var keys = libCore.GenerateX25519Keys("example");
-var client = new VMessClient()
+// var client = new VMessClient()
+// {
+//   Email = "example@test.com",
+//   Id = "26a28e07-8509-45b4-844a-6d881593d7de",
+// };
+
+// var inbound = new VMessInbound()
+// {
+//   Port = new Port(10001),
+//   Tag = "VMess in",
+//   Settings = new Inbound.VMessSettings()
+//   {
+//     Clients = [client],
+//   },
+//   StreamSettings = new StreamSettings()
+//   {
+//     Network = StreamNetwork.Raw,
+//     Security = StreamSecurity.None,
+//     RawSettings = new RawSettings()
+//     {
+//       AcceptProxyProtocol = false,
+//       Header = new HttpSettingsHeaders()
+//       {
+//         Request = new HttpRequest()
+//         {
+//           Path = ["/test"]
+//         }
+//       }
+//     },
+//     RealitySettings = new RealitySettings()
+//     {
+//       Target = "www.google.com",
+//       Fingerprint = Fingerprint.iOS,
+//       Show = false,
+//       ServerNames = ["ya.com", "www.yandex.com"],
+//       SpiderX = "/test",
+//       Password = "342ojh42i3g4io23h4iu234jhc23fc432",
+//       ShortIds = ["abcd"]
+//     }
+//   }
+// };
+
+var _shareFormatter = new V2RayShareFormatter();
+
+// var tcpTlsLink = _shareFormatter.CreateLink(inbound, client);
+
+var client = new ShadowSocksClient()
 {
   Email = "example@test.com",
-  Id = "26a28e07-8509-45b4-844a-6d881593d7de",
+  Password = "password",
+  Method = EncryptionMethod.Chacha20Poly1305
 };
 
-var inbound = new VMessInbound()
+var inbound = new ShadowSocksInbound()
 {
   Port = new Port(10001),
-  Tag = "VMess in",
-  Settings = new Inbound.VMessSettings()
+  Tag = "ShadowSocks in",
+  Settings = new Inbound.ShadowSocksSettings()
   {
     Clients = [client],
   },
@@ -119,81 +166,10 @@ var inbound = new VMessInbound()
   {
     Network = StreamNetwork.Raw,
     Security = StreamSecurity.None,
-    RawSettings = new RawSettings()
-    {
-      AcceptProxyProtocol = false,
-      Header = new HttpSettingsHeaders()
-      {
-        Request = new HttpRequest()
-        {
-          Path = ["/test"]
-        }
-      }
-    },
-    RealitySettings = new RealitySettings()
-    {
-      Target = "www.google.com",
-      Fingerprint = Fingerprint.iOS,
-      Show = false,
-      ServerNames = ["ya.com", "www.yandex.com"],
-      SpiderX = "/test",
-      Password = "342ojh42i3g4io23h4iu234jhc23fc432",
-      ShortIds = ["abcd"]
-    }
   }
 };
 
-var _shareFormatter = new V2RayShareFormatter();
-
-var tcpTlsLink = _shareFormatter.CreateLink(inbound, client);
-
-var _client = new VlessClient()
-{
-  Email = "example@test.com",
-  Id = "222232-32-3-2-3-23--23-2-3",
-  Flow = XtlsFlow.XtlsRprxVision,
-};
-
-var _inbound = new VlessInbound()
-{
-  Port = new Port(10001),
-  Tag = "Vless in",
-  Settings = new Inbound.VlessSettings()
-  {
-    Clients = [_client],
-    Decryption = VlessDecryption.None
-  },
-  StreamSettings = new StreamSettings()
-  {
-    Network = StreamNetwork.Raw,
-    Security = StreamSecurity.Reality,
-    RawSettings = new RawSettings()
-    {
-      AcceptProxyProtocol = false,
-      Header = new HttpSettingsHeaders()
-      {
-        Request = new HttpRequest()
-        {
-          Path = ["/test"]
-        }
-      }
-    },
-    RealitySettings = new RealitySettings()
-    {
-      Target = "www.google.com",
-      Fingerprint = Fingerprint.iOS,
-      Show = false,
-      ServerNames = ["ya.com", "www.yandex.com"],
-      SpiderX = "/test",
-      Password = "342ojh42i3g4io23h4iu234jhc23fc432",
-      ShortIds = ["abcd"]
-    }
-  }
-};
-
-var link = _shareFormatter.CreateLink(_inbound, _client);
-
-var inb = _shareFormatter.Parse(tcpTlsLink);
+var link = _shareFormatter.CreateLink(inbound, client);
 
 // var res = XrayConfig.FromJson(json);
 
@@ -204,7 +180,7 @@ var inb = _shareFormatter.Parse(tcpTlsLink);
 
 var version = libCore.Version();
 
-Console.WriteLine(tcpTlsLink);
+// Console.WriteLine(tcpTlsLink);
 Console.WriteLine($"Version: {version}");
 
 Console.WriteLine("Press key to close this window");
